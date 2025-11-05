@@ -1,0 +1,46 @@
+{
+  "name": "@wallet-os/frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "echo 'No linting configured'",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@dnd-kit/accessibility": "^3.0.6",
+    "@dnd-kit/core": "^6.1.0",
+    "@dnd-kit/sortable": "^8.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@hookform/resolvers": "^5.2.2",
+    "@radix-ui/react-checkbox": "^1.3.3",
+    "@radix-ui/react-popover": "^1.1.15",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@tailwindcss/vite": "^4.1.0",
+    "@vitejs/plugin-react": "^4.3.3",
+    "@wallet-os/shared": "workspace:*",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.552.0",
+    "react": "^18.3.1",
+    "react-day-picker": "^9.11.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.66.0",
+    "react-router-dom": "^7.1.3",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.0",
+    "tailwindcss-animate": "^1.0.7",
+    "vite-plugin-pwa": "^0.21.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@wallet-os/config": "workspace:*",
+    "shadcn": "^3.5.0",
+    "typescript": "^5.7.2"
+  }
+}

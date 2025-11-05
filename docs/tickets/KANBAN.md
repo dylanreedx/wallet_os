@@ -1,0 +1,162 @@
+# Wallet OS - KANBAN Board
+
+**Last Updated**: 2025-11-05 (Expense UI/UX overhaul complete: P4-002, P4-003 done, P4-009 partial; P4-011, P4-012 tickets created)
+
+## Board Status
+
+- **Total Tickets**: 81
+- **DONE**: 48 (Phases 1-3 complete, Phase 4 enhanced, Phase 5 partial, Phase 6 complete, Phase 7 partial)
+- **TODO**: 33 (Phases 4-10 remaining, including new calendar view and drag placeholder tickets)
+- **IN PROGRESS**: 0
+- **QA**: 0
+
+---
+
+## DONE ✅
+
+### Phase 1: Foundation & Setup (9 tickets)
+
+- [P1-001: Vite + React + TypeScript setup](./P1-001-vite-react-typescript-setup.md) ✅
+- [P1-002: Tailwind CSS v5 configuration](./P1-002-tailwind-css-v5-configuration.md) ✅
+- [P1-003: Drizzle ORM setup](./P1-003-drizzle-orm-setup.md) ✅
+- [P1-004: Database schema definition](./P1-004-database-schema-definition.md) ✅
+- [P1-005: Fastify backend setup](./P1-005-fastify-backend-setup.md) ✅
+- [P1-006: shadcn/ui initialization](./P1-006-shadcn-ui-initialization.md) ✅
+- [P1-007: Environment variables template](./P1-007-environment-variables-template.md) ✅
+- [P1-008: TypeScript path aliases](./P1-008-typescript-path-aliases.md) ✅
+- [P1-009: PWA manifest configuration](./P1-009-pwa-manifest-configuration.md) ✅
+
+### Phase 2: Backend API & Services (10 tickets)
+
+- [P2-001: Authentication routes](./P2-001-authentication-routes.md) ✅
+- [P2-002: Expenses CRUD routes](./P2-002-expenses-crud-routes.md) ✅
+- [P2-003: Goals CRUD routes](./P2-003-goals-crud-routes.md) ✅
+- [P2-004: Goal Items CRUD routes](./P2-004-goal-items-crud-routes.md) ✅
+- [P2-005: Budget analysis route](./P2-005-budget-analysis-route.md) ✅
+- [P2-006: Budget suggestions route](./P2-006-budget-suggestions-route.md) ✅
+- [P2-007: Social sharing routes](./P2-007-social-sharing-routes.md) ✅
+- [P2-008: OpenAI service](./P2-008-openai-service.md) ✅
+- [P2-009: Auth middleware](./P2-009-auth-middleware.md) ✅
+- [P2-010: Database connection testing](./P2-010-database-connection-testing.md) ✅
+
+### Phase 3: Frontend Foundation (6 tickets)
+
+- [P3-001: API client with authentication](./P3-001-api-client-with-authentication.md) ✅
+- [P3-002: Auth context and provider](./P3-002-auth-context-and-provider.md) ✅
+- [P3-003: Login page](./P3-003-login-page.md) ✅
+- [P3-004: Basic dashboard](./P3-004-basic-dashboard.md) ✅
+- [P3-005: React Router setup](./P3-005-react-router-setup.md) ✅
+- [P3-006: shadcn/ui components installation](./P3-006-shadcn-ui-components-installation.md) ✅
+
+### Phase 4: Core UI Components & Layout (7 tickets completed, 3 remaining)
+
+- [P4-001: Mobile Navigation](./P4-001-mobile-navigation.md) ✅
+- [P4-002: Expense Entry Form](./P4-002-expense-entry-form.md) ✅ (Enhanced with engaging inputs)
+- [P4-003: Expense List](./P4-003-expense-list.md) ✅ (Enhanced with drag-and-drop, compact design)
+- [P4-006: Goal Creation Form](./P4-006-goal-creation-form.md) ✅
+- [P4-007: Goal Progress Visualization](./P4-007-goal-progress-visualization.md) ✅
+- [P4-008: Goal Timeline View](./P4-008-goal-timeline-view.md) ✅
+- [P4-010: Date Picker Calendar Component](./P4-010-date-picker-calendar.md) ✅
+
+### Phase 7: Budget Analysis Features (5 tickets completed, 4 remaining)
+
+- [P7-001: Budget Analysis UI](./P7-001-budget-analysis-ui.md) ✅
+- [P7-002: Display Budget Suggestions](./P7-002-display-budget-suggestions.md) ✅
+- [P7-008: Recurring Monthly Expenses](./P7-008-recurring-monthly-expenses.md) ✅
+- [P7-009: Budget Analysis Bug Fixes](./P7-009-budget-analysis-bug-fixes.md) ✅
+- [P7-010: AI SDK Migration & Performance](./P7-010-ai-sdk-migration-performance.md) ✅
+
+---
+
+## TODO 📋
+
+### Phase 4: Core UI Components & Layout (5 tickets remaining)
+
+- [P4-004: Category Breakdown](./P4-004-category-breakdown.md)
+- [P4-005: Monthly Summary](./P4-005-monthly-summary.md)
+- [P4-009: Mobile Gestures & Animations](./P4-009-mobile-gestures-animations.md) (Partial - drag-and-drop, swipe, pull-to-refresh done; page transitions, loading skeletons remaining)
+- [P4-011: Calendar View Switcher](./P4-011-calendar-view-switcher.md) (Future enhancement)
+- [P4-012: Cross-Date Drag Drop Placeholder](./P4-012-cross-date-drag-placeholder.md) (UX improvement for drag and drop)
+
+### Phase 5: Expense Tracking Features (4 tickets remaining)
+
+- [P5-005: Category Management](./P5-005-category-management.md)
+- [P5-006: Monthly Summary](./P5-006-monthly-summary.md)
+- [P5-007: Category Breakdown](./P5-007-category-breakdown.md)
+- [P5-008: Data Persistence](./P5-008-data-persistence.md)
+
+### Phase 6: Goal Management Features (COMPLETE ✅ - 7 tickets)
+
+- [P6-001: Goal Creation](./P6-001-goal-creation.md) ✅
+- [P6-002: Goal Item Management](./P6-002-goal-item-management.md) ✅
+- [P6-003: Progress Tracking](./P6-003-progress-tracking.md) ✅
+- [P6-004: Goal Timeline](./P6-004-goal-timeline.md) ✅
+- [P6-005: Goal Editing](./P6-005-goal-editing.md) ✅
+- [P6-006: Goal Deletion](./P6-006-goal-deletion.md) ✅
+- [P6-007: Goal Statistics](./P6-007-goal-statistics.md) ✅
+
+### Phase 7: Budget Analysis Features (9 tickets)
+
+**DONE:**
+- [P7-001: Budget Analysis UI](./P7-001-budget-analysis-ui.md) ✅
+- [P7-002: Display Budget Suggestions](./P7-002-display-budget-suggestions.md) ✅
+- [P7-008: Recurring Monthly Expenses](./P7-008-recurring-monthly-expenses.md) ✅
+- [P7-009: Budget Analysis Bug Fixes](./P7-009-budget-analysis-bug-fixes.md) ✅
+- [P7-010: AI SDK Migration & Performance](./P7-010-ai-sdk-migration-performance.md) ✅
+
+**TODO:**
+- [P7-003: Goal Recommendations](./P7-003-goal-recommendations.md)
+- [P7-004: Historical Analysis](./P7-004-historical-analysis.md)
+- [P7-005: Budget vs Actual](./P7-005-budget-vs-actual.md)
+- [P7-006: Smart Alerts](./P7-006-smart-alerts.md)
+
+### Phase 8: Social Features (6 tickets)
+
+- [P8-001: Share Goal UI](./P8-001-share-goal-ui.md)
+- [P8-002: Shared Goals List](./P8-002-shared-goals-list.md)
+- [P8-003: Collaborative Goal Tracking](./P8-003-collaborative-goal-tracking.md)
+- [P8-004: User Invitation System](./P8-004-user-invitation-system.md)
+- [P8-005: Role Management](./P8-005-role-management.md)
+- [P8-006: Shared Expense Contributions](./P8-006-shared-expense-contributions.md)
+
+### Phase 9: PWA & Mobile Optimization (7 tickets)
+
+- [P9-001: Service Worker](./P9-001-service-worker.md)
+- [P9-002: App Icons](./P9-002-app-icons.md)
+- [P9-003: iOS Optimizations](./P9-003-ios-optimizations.md)
+- [P9-004: Gesture Handlers](./P9-004-gesture-handlers.md)
+- [P9-005: Smooth Animations](./P9-005-smooth-animations.md)
+- [P9-006: Performance Optimization](./P9-006-performance-optimization.md)
+- [P9-007: Testing on iPhone](./P9-007-testing-on-iphone.md)
+
+### Phase 10: Polish & Enhancements (8 tickets)
+
+- [P10-001: Loading States](./P10-001-loading-states.md)
+- [P10-002: Error Handling](./P10-002-error-handling.md)
+- [P10-003: Form Validation](./P10-003-form-validation.md)
+- [P10-004: Accessibility](./P10-004-accessibility.md)
+- [P10-005: Data Persistence](./P10-005-data-persistence.md)
+- [P10-006: Performance](./P10-006-performance.md)
+- [P10-007: Testing](./P10-007-testing.md)
+- [P10-008: Documentation](./P10-008-documentation.md)
+
+---
+
+## IN PROGRESS 🚧
+
+_No tickets currently in progress_
+
+---
+
+## QA 🧪
+
+_No tickets currently in QA_
+
+---
+
+## Notes
+
+- Tickets are organized by phase and status
+- Click on any ticket to view detailed information
+- Move tickets between columns as work progresses
+- Update this board when ticket status changes
