@@ -1,12 +1,12 @@
 # Wallet OS - KANBAN Board
 
-**Last Updated**: 2025-11-05 (Expense UI/UX overhaul; P4-004 compact design refinement; P4-009 partial; P4-011, P4-012 tickets created)
+**Last Updated**: 2025-11-06 (Vertical spacing compacting initiative; P4-013 through P4-017 tickets created for ultra-compact layout)
 
 ## Board Status
 
-- **Total Tickets**: 81
+- **Total Tickets**: 86
 - **DONE**: 50 (Phases 1-3 complete, Phase 4 enhanced, Phase 5 partial, Phase 6 complete, Phase 7 partial)
-- **TODO**: 31 (Phases 4-10 remaining, including new calendar view and drag placeholder tickets)
+- **TODO**: 36 (Phases 4-10 remaining, including vertical spacing optimization tickets)
 - **IN PROGRESS**: 0
 - **QA**: 0
 
@@ -73,12 +73,17 @@
 
 ## TODO 📋
 
-### Phase 4: Core UI Components & Layout (4 tickets remaining)
+### Phase 4: Core UI Components & Layout (9 tickets remaining)
 
 - [P4-005: Monthly Summary](./P4-005-monthly-summary.md)
 - [P4-009: Mobile Gestures & Animations](./P4-009-mobile-gestures-animations.md) (Partial - drag-and-drop, swipe, pull-to-refresh done; page transitions, loading skeletons remaining)
 - [P4-011: Calendar View Switcher](./P4-011-calendar-view-switcher.md) (Future enhancement)
 - [P4-012: Cross-Date Drag Drop Placeholder](./P4-012-cross-date-drag-placeholder.md) (UX improvement for drag and drop)
+- [P4-013: Compact ExpensesPage Layout](./P4-013-compact-expenses-layout.md) (Reduce vertical spacing throughout)
+- [P4-014: Collapsible ExpenseFilters](./P4-014-collapsible-expense-filters.md) (Desktop collapsible, mobile drawer)
+- [P4-015: Ultra-Compact MonthlySummary](./P4-015-ultra-compact-monthly-summary.md) (Drastically reduce vertical footprint)
+- [P4-016: Reduce Page Header Spacing](./P4-016-reduce-page-header-spacing.md) (Compact header design)
+- [P4-017: Optimize ExpenseList Spacing](./P4-017-optimize-expense-list-spacing.md) (Tighter list and date headers)
 
 ### Phase 5: Expense Tracking Features (4 tickets remaining)
 
@@ -163,4 +168,5 @@ _No tickets currently in QA_
 - Click on any ticket to view detailed information
 - Move tickets between columns as work progresses
 - Update this board when ticket status changes
- - UI refinement: Category Breakdown reworked to reduce vertical footprint using shadcn components (Button, Dialog, Card)
+- UI refinement: Category Breakdown reworked to reduce vertical footprint using shadcn components (Button, Dialog, Card)
+- **2025-11-06**: Vertical spacing compacting initiative - 5 new tickets created (P4-013 through P4-017) to transform ExpensesPage into ultra-compact, information-dense layout inspired by professional data tables and project boards

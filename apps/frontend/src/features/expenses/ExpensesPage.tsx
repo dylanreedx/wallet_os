@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ExpenseFormDialog } from './ExpenseFormDialog';
 import { ExpenseList } from './ExpenseList';
 import { CategoryBreakdown } from './CategoryBreakdown';
+import { MonthlySummary } from './MonthlySummary';
 
 export default function ExpensesPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -22,6 +23,7 @@ export default function ExpensesPage() {
           </div>
           <ExpenseFormDialog onSuccess={handleExpenseCreated} />
         </div>
+        <MonthlySummary refreshTrigger={refreshTrigger} />
         <CategoryBreakdown
           onCategorySelect={setSelectedCategory}
           selectedCategory={selectedCategory}
