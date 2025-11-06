@@ -52,11 +52,12 @@ interface Expense {
 
 interface ExpenseListProps {
   refreshTrigger?: number;
+  selectedCategory?: string | null;
 }
 
 const PULL_TO_REFRESH_THRESHOLD = 50; // pixels to pull before triggering refresh
 
-export function ExpenseList({ refreshTrigger }: ExpenseListProps) {
+export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListProps) {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +68,16 @@ export function ExpenseList({ refreshTrigger }: ExpenseListProps) {
     endDate: null,
     searchQuery: '',
   });
+
+  // Sync external category selection with internal filters
+  useEffect(() => {
+    if (selectedCategory !== undefined) {
+      setFilters((prev) => ({
+        ...prev,
+        category: selectedCategory,
+      }));
+    }
+  }, [selectedCategory]);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deleteConfirmExpense, setDeleteConfirmExpense] =
     useState<Expense | null>(null);
