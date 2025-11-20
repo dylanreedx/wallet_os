@@ -27,6 +27,7 @@ export const expenses = sqliteTable('expenses', {
   amount: real('amount').notNull(),
   description: text('description').notNull(),
   category: text('category'),
+  color: text('color'), // Hex color code for UI accent
   date: integer('date', { mode: 'timestamp' }).notNull(),
   goalId: integer('goal_id').references(() => goals.id, {
     onDelete: 'set null',
@@ -128,6 +129,17 @@ export const monthlyExpenses = sqliteTable('monthly_expenses', {
     .$defaultFn(() => new Date()),
 });
 
+export const magicLinks = sqliteTable('magic_links', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  email: text('email').notNull(),
+  token: text('token').notNull().unique(),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  used: integer('used', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Expense = typeof expenses.$inferSelect;
@@ -142,3 +154,5 @@ export type BudgetSuggestion = typeof budgetSuggestions.$inferSelect;
 export type NewBudgetSuggestion = typeof budgetSuggestions.$inferInsert;
 export type MonthlyExpense = typeof monthlyExpenses.$inferSelect;
 export type NewMonthlyExpense = typeof monthlyExpenses.$inferInsert;
+export type MagicLink = typeof magicLinks.$inferSelect;
+export type NewMagicLink = typeof magicLinks.$inferInsert;

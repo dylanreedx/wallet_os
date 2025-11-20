@@ -1,12 +1,12 @@
 # Wallet OS - KANBAN Board
 
-**Last Updated**: 2025-11-06 (Vertical spacing compacting initiative; P4-013 through P4-017 tickets created for ultra-compact layout)
+**Last Updated**: 2025-11-19 (TanStack Query Integration)
 
 ## Board Status
 
-- **Total Tickets**: 86
-- **DONE**: 50 (Phases 1-3 complete, Phase 4 enhanced, Phase 5 partial, Phase 6 complete, Phase 7 partial)
-- **TODO**: 36 (Phases 4-10 remaining, including vertical spacing optimization tickets)
+- **Total Tickets**: 97
+- **DONE**: 67 (Phases 1-3 complete, Phase 4 enhanced, Phase 9 started, Phase 10 started)
+- **TODO**: 30 (Phases 4-10 remaining)
 - **IN PROGRESS**: 0
 - **QA**: 0
 
@@ -26,9 +26,10 @@
 - [P1-008: TypeScript path aliases](./P1-008-typescript-path-aliases.md) ✅
 - [P1-009: PWA manifest configuration](./P1-009-pwa-manifest-configuration.md) ✅
 
-### Phase 2: Backend API & Services (10 tickets)
+### Phase 2: Backend API & Services (11 tickets)
 
 - [P2-001: Authentication routes](./P2-001-authentication-routes.md) ✅
+- [P2-011: Secure Authentication (Magic Links)](./P2-011-secure-authentication.md) ✅
 - [P2-002: Expenses CRUD routes](./P2-002-expenses-crud-routes.md) ✅
 - [P2-003: Goals CRUD routes](./P2-003-goals-crud-routes.md) ✅
 - [P2-004: Goal Items CRUD routes](./P2-004-goal-items-crud-routes.md) ✅
@@ -39,16 +40,21 @@
 - [P2-009: Auth middleware](./P2-009-auth-middleware.md) ✅
 - [P2-010: Database connection testing](./P2-010-database-connection-testing.md) ✅
 
-### Phase 3: Frontend Foundation (6 tickets)
+### Phase 3: Frontend Foundation (7 tickets)
 
 - [P3-001: API client with authentication](./P3-001-api-client-with-authentication.md) ✅
 - [P3-002: Auth context and provider](./P3-002-auth-context-and-provider.md) ✅
 - [P3-003: Login page](./P3-003-login-page.md) ✅
+- [P3-007: Magic Link UI](./P3-007-magic-link-ui.md) ✅
 - [P3-004: Basic dashboard](./P3-004-basic-dashboard.md) ✅
 - [P3-005: React Router setup](./P3-005-react-router-setup.md) ✅
 - [P3-006: shadcn/ui components installation](./P3-006-shadcn-ui-components-installation.md) ✅
 
-### Phase 4: Core UI Components & Layout (8 tickets completed, 4 remaining)
+### Phase 9: PWA & Mobile Optimization (1 ticket completed)
+
+- [P9-002: App Icons](./P9-002-app-icons.md) ✅
+
+### Phase 4: Core UI Components & Layout (21 tickets completed, 4 remaining)
 
 - [P4-001: Mobile Navigation](./P4-001-mobile-navigation.md) ✅
 - [P4-002: Expense Entry Form](./P4-002-expense-entry-form.md) ✅ (Enhanced with engaging inputs)
@@ -59,6 +65,19 @@
 - [P4-007: Goal Progress Visualization](./P4-007-goal-progress-visualization.md) ✅
 - [P4-008: Goal Timeline View](./P4-008-goal-timeline-view.md) ✅
 - [P4-010: Date Picker Calendar Component](./P4-010-date-picker-calendar.md) ✅
+- [P4-013: Compact ExpensesPage Layout](./P4-013-compact-expenses-layout.md) ✅
+- [P4-014: Collapsible ExpenseFilters](./P4-014-collapsible-expense-filters.md) ✅
+- [P4-015: Ultra-Compact MonthlySummary](./P4-015-ultra-compact-monthly-summary.md) ✅
+- [P4-016: Reduce Page Header Spacing](./P4-016-reduce-page-header-spacing.md) ✅
+- [P4-017: Optimize ExpenseList Spacing](./P4-017-optimize-expense-list-spacing.md) ✅
+- [P4-018: Ultra-Compact ExpenseItem Cards](./P4-018-ultra-compact-expense-items.md) ✅
+- [P4-019: Expense Color System & SUBSCRIPTION Label](./P4-019-expense-color-system.md) ✅
+- [P4-020: Drag & Drop Mobile Improvements](./P4-020-drag-drop-mobile-improvements.md) ✅
+- [P4-021: Monthly Summary Compact/Expanded View](./P4-021-monthly-summary-compact-expanded.md) ✅
+- [P4-022: Category Breakdown Graph Animation](./P4-022-category-breakdown-graph-animation.md) ✅
+- [P4-023: Expense Item Full Width & Truncation Fix](./P4-023-expense-item-full-width-fix.md) ✅
+- [P4-024: Filters Modal Keyboard Responsiveness](./P4-024-filters-modal-keyboard-responsiveness.md) ✅
+- [P4-025: Create Expense Modal Responsiveness](./P4-025-create-expense-modal-responsiveness.md) ✅
 
 ### Phase 7: Budget Analysis Features (6 tickets completed, 4 remaining)
 
@@ -73,17 +92,12 @@
 
 ## TODO 📋
 
-### Phase 4: Core UI Components & Layout (9 tickets remaining)
+### Phase 4: Core UI Components & Layout (4 tickets remaining)
 
 - [P4-005: Monthly Summary](./P4-005-monthly-summary.md)
 - [P4-009: Mobile Gestures & Animations](./P4-009-mobile-gestures-animations.md) (Partial - drag-and-drop, swipe, pull-to-refresh done; page transitions, loading skeletons remaining)
 - [P4-011: Calendar View Switcher](./P4-011-calendar-view-switcher.md) (Future enhancement)
 - [P4-012: Cross-Date Drag Drop Placeholder](./P4-012-cross-date-drag-placeholder.md) (UX improvement for drag and drop)
-- [P4-013: Compact ExpensesPage Layout](./P4-013-compact-expenses-layout.md) (Reduce vertical spacing throughout)
-- [P4-014: Collapsible ExpenseFilters](./P4-014-collapsible-expense-filters.md) (Desktop collapsible, mobile drawer)
-- [P4-015: Ultra-Compact MonthlySummary](./P4-015-ultra-compact-monthly-summary.md) (Drastically reduce vertical footprint)
-- [P4-016: Reduce Page Header Spacing](./P4-016-reduce-page-header-spacing.md) (Compact header design)
-- [P4-017: Optimize ExpenseList Spacing](./P4-017-optimize-expense-list-spacing.md) (Tighter list and date headers)
 
 ### Phase 5: Expense Tracking Features (4 tickets remaining)
 
@@ -127,18 +141,21 @@
 - [P8-005: Role Management](./P8-005-role-management.md)
 - [P8-006: Shared Expense Contributions](./P8-006-shared-expense-contributions.md)
 
-### Phase 9: PWA & Mobile Optimization (7 tickets)
+### Phase 9: PWA & Mobile Optimization (6 tickets remaining)
 
 - [P9-001: Service Worker](./P9-001-service-worker.md)
-- [P9-002: App Icons](./P9-002-app-icons.md)
 - [P9-003: iOS Optimizations](./P9-003-ios-optimizations.md)
 - [P9-004: Gesture Handlers](./P9-004-gesture-handlers.md)
 - [P9-005: Smooth Animations](./P9-005-smooth-animations.md)
 - [P9-006: Performance Optimization](./P9-006-performance-optimization.md)
 - [P9-007: Testing on iPhone](./P9-007-testing-on-iphone.md)
 
-### Phase 10: Polish & Enhancements (8 tickets)
+### Phase 10: Polish & Enhancements (9 tickets)
 
+**DONE:**
+- [P10-009: TanStack Query Integration](./P10-009-tanstack-query-integration.md) ✅
+
+**TODO:**
 - [P10-001: Loading States](./P10-001-loading-states.md)
 - [P10-002: Error Handling](./P10-002-error-handling.md)
 - [P10-003: Form Validation](./P10-003-form-validation.md)
@@ -169,4 +186,8 @@ _No tickets currently in QA_
 - Move tickets between columns as work progresses
 - Update this board when ticket status changes
 - UI refinement: Category Breakdown reworked to reduce vertical footprint using shadcn components (Button, Dialog, Card)
-- **2025-11-06**: Vertical spacing compacting initiative - 5 new tickets created (P4-013 through P4-017) to transform ExpensesPage into ultra-compact, information-dense layout inspired by professional data tables and project boards
+- **2025-11-05**: Completed 6 critical mobile UX improvement tickets (P4-020 through P4-025): Added drag handle to prevent accidental drags, implemented compact/expanded MonthlySummary toggle, added chart animations, fixed expense item full-width layout, and implemented keyboard-aware modals using visualViewport API. All tickets ready for QA testing.
+- **2025-11-06**: Added 6 critical mobile UX improvement tickets (P4-020 through P4-025) addressing drag-drop issues, modal responsiveness, layout truncation, and animation enhancements based on real-world mobile testing feedback.
+- **2025-11-06**: Vertical spacing compacting initiative COMPLETE - 6 tickets implemented (P4-013 through P4-018) transforming ExpensesPage into ultra-compact, information-dense layout inspired by Stripe, Linear, and modern data tables. Result: 45-50% more content visible per screen with professional aesthetic.
+- **2025-11-05**: Expense Color System (P4-019) - Added automatic color assignment for expenses with friendly accessible palette. Colors appear on icons and badges while main borders remain neutral. Changed "AUTO" to "SUBSCRIPTION" label. Created migration and seed script for backfilling existing expenses.
+- **2025-11-19**: Implemented Secure Authentication (Magic Links) with Resend integration (P2-011, P3-007). Generated premium PWA assets (P9-002). Codebase analysis completed.

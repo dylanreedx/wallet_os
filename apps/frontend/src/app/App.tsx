@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { BottomNav } from '@/components/navigation/BottomNav';
 import LoginPage from '@/features/auth/LoginPage';
+import VerifyPage from '@/features/auth/VerifyPage';
 import Dashboard from '@/features/dashboard/Dashboard';
 import ExpensesPage from '@/features/expenses/ExpensesPage';
 import GoalsPage from '@/features/goals/GoalsPage';
@@ -36,6 +37,7 @@ function AppRoutes() {
           path="/login"
           element={sessionId ? <Navigate to="/" replace /> : <LoginPage />}
         />
+        <Route path="/auth/verify" element={<VerifyPage />} />
         <Route
           path="/"
           element={

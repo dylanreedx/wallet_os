@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { goals } from '@/lib/api';
+import { useGoals } from '@/hooks/useGoals';
 import { GoalFormDialog } from './GoalFormDialog';
 import { GoalCard } from './GoalCard';
 import { GoalStats } from './GoalStats';
@@ -10,32 +10,13 @@ import { Button } from '@/components/ui/button';
 export default function GoalsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [goalsList, setGoalsList] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  useEffect(() => {
-    if (user?.id) {
-      loadGoals();
-    }
-  }, [user?.id, refreshTrigger]);
+  const { data: goalsList = [], isLoading: loading, error: queryError } = useGoals({
+    userId: user?.id,
+  });
 
-  const loadGoals = async () => {
-    if (!user?.id) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const data = await goals.getAll(user.id);
-      setGoalsList(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load goals');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const error = queryError ? (queryError as Error).message : null;
 
   const handleGoalCreated = (goal: any) => {
     setRefreshTrigger((prev) => prev + 1);

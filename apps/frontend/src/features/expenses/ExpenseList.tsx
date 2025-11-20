@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { expenses as expensesApi, monthlyExpenses } from '@/lib/api';
+import { useExpenses, useUpdateExpense, useDeleteExpense, type Expense } from '@/hooks/useExpenses';
+import { useMonthlyExpenses } from '@/hooks/useMonthlyExpenses';
 import { format } from 'date-fns';
 import { Loader2, Receipt, ArrowDown } from 'lucide-react';
 import { ExpenseFiltersComponent, ExpenseFilters } from './ExpenseFilters';
@@ -33,22 +34,11 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable';
-// Note: @dnd-kit/modifiers may need to be installed separately
-// For now, we'll implement restrictions manually if needed
 import { DraggableExpenseItem } from './DraggableExpenseItem';
 import { ExpensePlaceholder } from './ExpensePlaceholder';
+import { ExpenseItem } from './ExpenseItem';
 
-interface Expense {
-  id: number;
-  userId: number;
-  amount: number;
-  description: string;
-  category: string | null;
-  date: string;
-  goalId: number | null;
-  goalItemId: number | null;
-  createdAt: string;
-}
+
 
 interface ExpenseListProps {
   refreshTrigger?: number;
@@ -57,17 +47,43 @@ interface ExpenseListProps {
 
 const PULL_TO_REFRESH_THRESHOLD = 50; // pixels to pull before triggering refresh
 
+// Device detection hook
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+}
+
 export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListProps) {
   const { user } = useAuth();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
   const [filters, setFilters] = useState<ExpenseFilters>({
     category: null,
     startDate: null,
     endDate: null,
     searchQuery: '',
   });
+
+  // TanStack Query hooks
+  const { data: expenses = [], isLoading: loading, error: queryError, refetch } = useExpenses({
+    userId: user?.id,
+    startDate: filters.startDate || undefined,
+    endDate: filters.endDate || undefined,
+  });
+  const updateExpenseMutation = useUpdateExpense();
+  const deleteExpenseMutation = useDeleteExpense();
+
+  const error = queryError ? (queryError as Error).message : null;
 
   // Sync external category selection with internal filters
   useEffect(() => {
@@ -78,97 +94,70 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
       }));
     }
   }, [selectedCategory]);
+
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [deleteConfirmExpense, setDeleteConfirmExpense] =
-    useState<Expense | null>(null);
-  const [recurringExpensesList, setRecurringExpensesList] = useState<any[]>([]);
+  const [deleteConfirmExpense, setDeleteConfirmExpense] = useState<Expense | null>(null);
+
+  // Fetch recurring expenses using TanStack Query
+  const { data: recurringExpensesList = [] } = useMonthlyExpenses({
+    userId: user?.id,
+    includeInactive: false,
+  });
+
+  // Drag-and-drop state (both desktop and mobile)
   const [activeId, setActiveId] = useState<string | null>(null);
-  
-  // Drag over state for cross-date placeholder
   const [dragOverDateKey, setDragOverDateKey] = useState<string | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // Pull-to-refresh state
+  // Pull-to-refresh state (mobile only)
   const [pullDistance, setPullDistance] = useState(0);
   const [isPulling, setIsPulling] = useState(false);
   const touchStartY = useRef<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Configure sensors for drag and drop (mobile + keyboard)
+  // Configure sensors for drag and drop (BOTH DESKTOP AND MOBILE)
+  // TouchSensor: Press-and-hold activation for mobile (500ms delay, stricter tolerance)
+  // PointerSensor: Mouse drag for desktop (10px movement required)
   const sensors = useSensors(
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 500, // Press and hold for 500ms to activate drag (increased from 450ms)
+        tolerance: 5, // Reduced tolerance - must hold position more accurately
+      },
+    }),
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Require 8px movement before activating (prevents accidental drags)
+        distance: 10, // 10px movement required for desktop drag
       },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 300, // 300ms long-press on mobile
-        tolerance: 5, // 5px movement tolerance
-      },
     })
   );
 
-  // Haptic feedback helper (if available)
+  // Haptic feedback helper
   const triggerHaptic = () => {
     if ('vibrate' in navigator) {
-      navigator.vibrate(10); // Short vibration
+      navigator.vibrate(10);
     }
   };
 
-  const fetchExpenses = async () => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Build date range params if filters are set
-      const startDate = filters.startDate || undefined;
-      const endDate = filters.endDate || undefined;
-
-      const data = await expensesApi.getAll(user.id, startDate, endDate);
-      setExpenses(data || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load expenses');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Refetch when refreshTrigger changes
   useEffect(() => {
-    fetchExpenses();
+    if (refreshTrigger) {
+      refetch();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, refreshTrigger, filters.startDate, filters.endDate]);
+  }, [refreshTrigger]);
 
-  // Load recurring expenses to check which expenses are recurring
-  useEffect(() => {
-    const loadRecurring = async () => {
-      if (!user?.id) return;
-      try {
-        const data = await monthlyExpenses.getAll(user.id, false);
-        setRecurringExpensesList(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error('Failed to load recurring expenses:', err);
-      }
-    };
-    loadRecurring();
-  }, [user?.id, refreshTrigger]);
+
 
   // Apply client-side filters (category and search)
-  const filteredExpenses = expenses.filter((expense) => {
-    // Category filter
+  const filteredExpenses = expenses.filter((expense: Expense) => {
     if (filters.category && expense.category !== filters.category) {
       return false;
     }
 
-    // Search filter
     if (filters.searchQuery.trim()) {
       const query = filters.searchQuery.toLowerCase();
       if (!expense.description.toLowerCase().includes(query)) {
@@ -181,13 +170,12 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
 
   // Extract date part from ISO string (YYYY-MM-DD) to avoid timezone issues
   const getDateKey = (dateString: string): string => {
-    // Extract YYYY-MM-DD from ISO string (works with both "2025-11-02T00:00:00.000Z" and "2025-11-02")
     const match = dateString.match(/^(\d{4}-\d{2}-\d{2})/);
     return match ? match[1] : dateString.substring(0, 10);
   };
 
   // Group expenses by date and maintain order
-  const groupedExpenses = filteredExpenses.reduce((groups, expense) => {
+  const groupedExpenses = filteredExpenses.reduce((groups: Record<string, Expense[]>, expense: Expense) => {
     const dateKey = getDateKey(expense.date);
 
     if (!groups[dateKey]) {
@@ -197,13 +185,13 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
     return groups;
   }, {} as Record<string, Expense[]>);
 
-  // Handle drag start
+  // ==================== DESKTOP: Drag-and-drop handlers ====================
+  
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
     triggerHaptic();
   };
 
-  // Handle drag over - track position for placeholder
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
     
@@ -213,12 +201,11 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
       return;
     }
 
-    // Find the dragged expense and target expense
     const draggedExpense = filteredExpenses.find(
-      (e) => e.id.toString() === active.id
+      (e: Expense) => e.id.toString() === active.id
     );
     const targetExpense = filteredExpenses.find(
-      (e) => e.id.toString() === over.id
+      (e: Expense) => e.id.toString() === over.id
     );
 
     if (!draggedExpense || !targetExpense) {
@@ -230,12 +217,10 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
     const sourceDateKey = getDateKey(draggedExpense.date);
     const targetDateKey = getDateKey(targetExpense.date);
 
-    // Only show placeholder when dragging to a different date group
     if (sourceDateKey !== targetDateKey) {
-      // Find the index of the target expense within its date group
-      const targetDateExpenses = groupedExpenses[targetDateKey] || [];
+      const targetDateExpenses: Expense[] = groupedExpenses[targetDateKey] || [];
       const targetIndex = targetDateExpenses.findIndex(
-        (e) => e.id.toString() === over.id
+        (e: Expense) => e.id.toString() === over.id
       );
 
       if (targetIndex !== -1) {
@@ -246,17 +231,14 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
         setDragOverIndex(null);
       }
     } else {
-      // Same date group - no placeholder needed
       setDragOverDateKey(null);
       setDragOverIndex(null);
     }
   };
 
-  // Handle drag end - supports cross-date dragging
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
-    // Clear drag over state
     setDragOverDateKey(null);
     setDragOverIndex(null);
 
@@ -264,18 +246,17 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
       return;
     }
 
-    // Find which date group contains the dragged item and target
     let sourceDateKey: string | null = null;
     let targetDateKey: string | null = null;
     let sourceIndex = -1;
     let targetIndex = -1;
 
     for (const [dateKey, dateExpenses] of Object.entries(groupedExpenses)) {
-      const sourceIdx = dateExpenses.findIndex(
-        (e) => e.id.toString() === active.id
+      const sourceIdx = (dateExpenses as Expense[]).findIndex(
+        (e: Expense) => e.id.toString() === active.id
       );
-      const targetIdx = dateExpenses.findIndex(
-        (e) => e.id.toString() === over.id
+      const targetIdx = (dateExpenses as Expense[]).findIndex(
+        (e: Expense) => e.id.toString() === over.id
       );
 
       if (sourceIdx !== -1) {
@@ -292,8 +273,8 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
       return;
     }
 
-    const draggedExpense = expenses.find((e) => e.id.toString() === active.id);
-    const targetExpense = expenses.find((e) => e.id.toString() === over.id);
+    const draggedExpense = expenses.find((e: Expense) => e.id.toString() === active.id);
+    const targetExpense = expenses.find((e: Expense) => e.id.toString() === over.id);
 
     if (!draggedExpense || !targetExpense) {
       return;
@@ -302,79 +283,22 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
     // If dragging to a different date, update the expense date
     if (sourceDateKey !== targetDateKey) {
       try {
-        // Update the expense date to match the target date
         const targetDate = new Date(targetExpense.date);
-        await expensesApi.update(draggedExpense.id, {
-          ...draggedExpense,
-          date: targetDate.toISOString(),
+        await updateExpenseMutation.mutateAsync({
+          id: draggedExpense.id,
+          data: {
+            date: targetDate.toISOString(),
+          },
         });
-        
-        // Refresh expenses to reflect the date change
-        await fetchExpenses();
       } catch (error) {
         console.error('Failed to update expense date:', error);
-        setError('Failed to move expense to new date');
       }
-    } else {
-      // Reorder within the same date group
-      const newOrder = arrayMove(groupedExpenses[sourceDateKey], sourceIndex, targetIndex);
-      const newExpenses = [...expenses];
-      
-      // Update the order in the main expenses array
-      const dateExpenses = newExpenses.filter((e) => getDateKey(e.date) === sourceDateKey);
-      const otherExpenses = newExpenses.filter((e) => getDateKey(e.date) !== sourceDateKey);
-      
-      // Reorder date expenses
-      const reorderedDateExpenses = arrayMove(dateExpenses, sourceIndex, targetIndex);
-      
-      // Combine and maintain overall order
-      const allExpenses = [...otherExpenses, ...reorderedDateExpenses];
-      allExpenses.sort((a, b) => {
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
-        if (dateA !== dateB) return dateB - dateA; // Descending by date
-        // Within same date, maintain the new order
-        const aIndex = reorderedDateExpenses.findIndex((e) => e.id === a.id);
-        const bIndex = reorderedDateExpenses.findIndex((e) => e.id === b.id);
-        if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-        return 0;
-      });
-      
-      setExpenses(allExpenses);
     }
+    // Note: Reordering within same date is optimistic UI only (no backend persistence)
   };
 
-  const formatDateLabel = (dateKey: string) => {
-    // Parse the dateKey (YYYY-MM-DD) as a local date to preserve the intended date
-    const [year, month, day] = dateKey.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
+  // ==================== MOBILE: Pull-to-refresh handlers ====================
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    // Compare dates at midnight
-    const dateOnly = new Date(date);
-    dateOnly.setHours(0, 0, 0, 0);
-
-    if (dateOnly.getTime() === today.getTime()) {
-      return 'Today';
-    } else if (dateOnly.getTime() === yesterday.getTime()) {
-      return 'Yesterday';
-    } else {
-      // Format the date for display
-      return format(date, 'MMMM d, yyyy');
-    }
-  };
-
-  // Calculate totals
-  const totalAmount = filteredExpenses.reduce(
-    (sum, expense) => sum + expense.amount,
-    0
-  );
-
-  // Pull-to-refresh handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     if (scrollContainerRef.current?.scrollTop === 0) {
       touchStartY.current = e.touches[0].clientY;
@@ -396,12 +320,14 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
 
   const handleTouchEnd = () => {
     if (isPulling && pullDistance >= PULL_TO_REFRESH_THRESHOLD) {
-      fetchExpenses();
+      refetch();
     }
     setPullDistance(0);
     setIsPulling(false);
     touchStartY.current = null;
   };
+
+  // ==================== Common handlers ====================
 
   const handleEdit = (expense: Expense) => {
     setEditingExpense(expense);
@@ -418,34 +344,54 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
     if (!deleteConfirmExpense) return;
 
     try {
-      await expensesApi.delete(deleteConfirmExpense.id);
-      setExpenses((prev) =>
-        prev.filter((e) => e.id !== deleteConfirmExpense.id)
-      );
+      await deleteExpenseMutation.mutateAsync(deleteConfirmExpense.id);
       setDeleteConfirmExpense(null);
     } catch (error) {
-      setError(
-        error instanceof Error ? error.message : 'Failed to delete expense'
-      );
+      console.error('Failed to delete expense:', error);
     }
   };
 
   const handleEditSuccess = async (updatedExpense: Expense) => {
-    setExpenses((prev) =>
-      prev.map((e) => (e.id === updatedExpense.id ? updatedExpense : e))
-    );
     setEditingExpense(null);
-    
-    // Reload monthly expenses to recalculate recurring status
-    if (user?.id) {
-      try {
-        const data = await monthlyExpenses.getAll(user.id, false);
-        setRecurringExpensesList(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error('Failed to reload recurring expenses:', err);
-      }
+    // TanStack Query will automatically refetch via cache invalidation
+  };
+
+  const formatDateLabel = (dateKey: string) => {
+    const [year, month, day] = dateKey.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const dateOnly = new Date(date);
+    dateOnly.setHours(0, 0, 0, 0);
+
+    if (dateOnly.getTime() === today.getTime()) {
+      return 'Today';
+    } else if (dateOnly.getTime() === yesterday.getTime()) {
+      return 'Yesterday';
+    } else {
+      return format(date, 'MMMM d, yyyy');
     }
   };
+
+  const totalAmount = filteredExpenses.reduce(
+    (sum: number, expense: Expense) => sum + expense.amount,
+    0
+  );
+
+  const isRecurring = (expense: Expense) => {
+    return recurringExpensesList.some(
+      (recurring) =>
+        recurring.name === expense.description &&
+        Math.abs(recurring.amount - expense.amount) < 0.01 &&
+        recurring.isActive
+    );
+  };
+
+  // ==================== Render ====================
 
   if (loading && expenses.length === 0) {
     return (
@@ -463,13 +409,54 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
     );
   }
 
+  // Render expense items grouped by date
+  const renderExpenseItems = () => {
+    return Object.entries(groupedExpenses)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([dateKey, dateExpenses]) => (
+        <div key={dateKey} className="mb-2 last:mb-0">
+          {/* Date Header */}
+          <div className="px-3 py-1.5 mb-1.5">
+            <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              {formatDateLabel(dateKey)}
+            </h3>
+          </div>
+          
+          {/* Expense Items */}
+          <div className="space-y-0">
+            {(dateExpenses as Expense[]).map((expense: Expense, index: number) => {
+              const showPlaceholderAt =
+                dragOverDateKey === dateKey && dragOverIndex === index;
+              
+              return (
+                <div key={expense.id}>
+                  {showPlaceholderAt && <ExpensePlaceholder />}
+                  <DraggableExpenseItem
+                    expense={expense}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    isRecurring={isRecurring(expense)}
+                  />
+                </div>
+              );
+            })}
+            {/* Show placeholder at end of list if dragging to last position */}
+            {dragOverDateKey === dateKey &&
+              dragOverIndex === (dateExpenses as Expense[]).length && (
+                <ExpensePlaceholder />
+              )}
+          </div>
+        </div>
+      ));
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Filters */}
       <ExpenseFiltersComponent filters={filters} onFiltersChange={setFilters} />
 
-      {/* Pull-to-refresh indicator */}
-      {isPulling && (
+      {/* Pull-to-refresh indicator (mobile only) */}
+      {isMobile && isPulling && (
         <div
           className="flex items-center justify-center py-2 text-sm text-muted-foreground transition-opacity"
           style={{
@@ -507,6 +494,7 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
           )}
         </div>
       ) : (
+        // Unified drag-and-drop support for both desktop and mobile
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -518,7 +506,6 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
             setDragOverDateKey(null);
             setDragOverIndex(null);
           }}
-          // modifiers={[restrictToVerticalAxis, restrictToParentElement]} // Install @dnd-kit/modifiers if needed
           accessibility={{
             announcements: {
               onDragStart({ active }) {
@@ -527,10 +514,10 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
               onDragOver({ active, over }) {
                 if (over) {
                   const draggedExpense = filteredExpenses.find(
-                    (e) => e.id.toString() === active.id
+                    (e: Expense) => e.id.toString() === active.id
                   );
                   const targetExpense = filteredExpenses.find(
-                    (e) => e.id.toString() === over.id
+                    (e: Expense) => e.id.toString() === over.id
                   );
                   if (draggedExpense && targetExpense) {
                     const sourceDateKey = getDateKey(draggedExpense.date);
@@ -558,72 +545,27 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
         >
           <div
             ref={scrollContainerRef}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            className="space-y-2"
+            onTouchStart={isMobile ? handleTouchStart : undefined}
+            onTouchMove={isMobile ? handleTouchMove : undefined}
+            onTouchEnd={isMobile ? handleTouchEnd : undefined}
+            className="border rounded-lg bg-card p-2 w-full"
           >
             <SortableContext
-              items={filteredExpenses.map((e) => e.id.toString())}
+              items={filteredExpenses.map((e: Expense) => e.id.toString())}
               strategy={verticalListSortingStrategy}
             >
-              {Object.entries(groupedExpenses)
-                .sort(([a], [b]) => b.localeCompare(a)) // Sort dates descending
-                .map(([dateKey, dateExpenses]) => {
-                  return (
-                    <div key={dateKey} className="space-y-1">
-                      <h3 className="text-xs font-medium text-muted-foreground px-2 uppercase tracking-wide">
-                        {formatDateLabel(dateKey)}
-                      </h3>
-                      <div className="space-y-0.5">
-                        {dateExpenses.map((expense, index) => {
-                          // Check if this expense matches a recurring monthly expense
-                          const isRecurring = recurringExpensesList.some(
-                            (recurring) =>
-                              recurring.name === expense.description &&
-                              Math.abs(recurring.amount - expense.amount) < 0.01 &&
-                              recurring.isActive
-                          );
-                          
-                          // Show placeholder at this expense's position if dragging to this position
-                          const showPlaceholderAt =
-                            dragOverDateKey === dateKey && dragOverIndex === index;
-                          
-                          return (
-                            <div key={expense.id}>
-                              {showPlaceholderAt ? (
-                                <ExpensePlaceholder />
-                              ) : (
-                                <DraggableExpenseItem
-                                  expense={expense}
-                                  onEdit={handleEdit}
-                                  onDelete={handleDelete}
-                                  isRecurring={isRecurring}
-                                />
-                              )}
-                            </div>
-                          );
-                        })}
-                        {/* Show placeholder at end of list if dragging to last position */}
-                        {dragOverDateKey === dateKey &&
-                          dragOverIndex === dateExpenses.length && (
-                            <ExpensePlaceholder />
-                          )}
-                      </div>
-                    </div>
-                  );
-                })}
+              {renderExpenseItems()}
             </SortableContext>
 
-            {/* Total */}
-            <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t pt-3 mt-4">
-              <div className="flex items-center justify-between px-2">
-                <span className="text-xs font-medium text-muted-foreground">
+            {/* Total Footer */}
+            <div className="mt-2 pt-2.5 px-3 pb-2 bg-muted/30 border-t rounded-b-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                   {filteredExpenses.length === expenses.length
                     ? 'Total'
                     : `Total (${filteredExpenses.length} of ${expenses.length})`}
                 </span>
-                <span className="text-base font-bold tabular-nums">
+                <span className="text-base font-bold tabular-nums text-foreground">
                   ${totalAmount.toFixed(2)}
                 </span>
               </div>
@@ -636,21 +578,15 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
               <div className="opacity-50">
                 {(() => {
                   const expense = filteredExpenses.find(
-                    (e) => e.id.toString() === activeId
+                    (e: Expense) => e.id.toString() === activeId
                   );
                   if (!expense) return null;
-                  const isRecurring = recurringExpensesList.some(
-                    (recurring) =>
-                      recurring.name === expense.description &&
-                      Math.abs(recurring.amount - expense.amount) < 0.01 &&
-                      recurring.isActive
-                  );
                   return (
                     <DraggableExpenseItem
                       expense={expense}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
-                      isRecurring={isRecurring}
+                      isRecurring={isRecurring(expense)}
                     />
                   );
                 })()}

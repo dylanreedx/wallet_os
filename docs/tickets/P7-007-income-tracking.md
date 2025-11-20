@@ -31,10 +31,3 @@ Add income tracking to enable proper budget analysis. Start with a simple monthl
 
 - [P7-001: Budget Analysis UI](./P7-001-budget-analysis-ui.md)
 - [P2-001: Authentication routes](./P2-001-authentication-routes.md)
-
-
-
-
-
-
-

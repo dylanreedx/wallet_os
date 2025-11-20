@@ -172,8 +172,12 @@ export function ExpenseForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount - defaultValues.goalId is stable
 
-  // Auto-focus first input when form is rendered
+  // Auto-focus first input when form is rendered (only on desktop)
   useEffect(() => {
+    // Don't auto-focus on mobile to avoid triggering keyboard immediately
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) return;
+
     const firstInput = document.querySelector<HTMLInputElement>(
       'input[type="number"]'
     );
@@ -321,13 +325,13 @@ export function ExpenseForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 sm:space-y-4">
         <FormField
           control={form.control}
           name="amount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-base font-semibold">Amount</FormLabel>
+              <FormLabel className="text-sm sm:text-base font-semibold">Amount</FormLabel>
               <FormControl>
                 <PriceInput
                   value={field.value}
@@ -346,7 +350,7 @@ export function ExpenseForm({
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-base font-semibold">Description</FormLabel>
+              <FormLabel className="text-sm sm:text-base font-semibold">Description</FormLabel>
               <FormControl>
                 <DescriptionInput
                   value={field.value}
@@ -365,7 +369,7 @@ export function ExpenseForm({
           name="category"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-base font-semibold">Category</FormLabel>
+              <FormLabel className="text-sm sm:text-base font-semibold">Category</FormLabel>
               <FormControl>
                 <CategoryTags
                   selectedCategory={field.value}
@@ -386,7 +390,7 @@ export function ExpenseForm({
           name="date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Date</FormLabel>
+              <FormLabel className="text-sm sm:text-base font-semibold">Date</FormLabel>
               <FormControl>
                 <DatePicker
                   value={field.value}
@@ -405,7 +409,7 @@ export function ExpenseForm({
           name="goalId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Link to Goal (Optional)</FormLabel>
+              <FormLabel className="text-sm sm:text-base font-semibold">Link to Goal (Optional)</FormLabel>
               <Select
                 onValueChange={(value) => {
                   // "none" is our sentinel value, convert to undefined
@@ -443,7 +447,7 @@ export function ExpenseForm({
               name="goalItemId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Link to Specific Item (Optional)</FormLabel>
+                  <FormLabel className="text-sm sm:text-base font-semibold">Link to Specific Item (Optional)</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       // "none" is our sentinel value, convert to undefined

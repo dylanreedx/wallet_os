@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Use relative URLs in development to leverage Vite proxy, or absolute URL if provided via env
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
   const sessionId = localStorage.getItem('sessionId');
@@ -39,6 +40,11 @@ export const auth = {
       method: 'POST',
       body: JSON.stringify({ email, name }),
     });
+    // Session is NOT set here for magic links
+    return data;
+  },
+  verify: async (token: string) => {
+    const data = await fetchWithAuth(`/api/auth/verify?token=${token}`);
     if (data.sessionId) {
       localStorage.setItem('sessionId', data.sessionId);
     }

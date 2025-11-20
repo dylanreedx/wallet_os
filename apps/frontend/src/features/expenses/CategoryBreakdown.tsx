@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { expenses as expensesApi } from '@/lib/api';
+import { useExpenses } from '@/hooks/useExpenses';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -8,11 +8,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Loader2, TrendingUp, PieChart as PieChartIcon, X, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface Expense {
-  id: number;
-  amount: number;
-  category: string | null;
-}
+
 
 interface CategoryData {
   name: string;
@@ -56,57 +52,39 @@ const FALLBACK_COLORS = [
 
 export function CategoryBreakdown({ onCategorySelect, selectedCategory }: CategoryBreakdownProps) {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
-  const [totalExpenses, setTotalExpenses] = useState(0);
   const [showAllOpen, setShowAllOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(true); // Default to collapsed
+  const [collapsed, setCollapsed] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentMaxHeight, setContentMaxHeight] = useState<number | 'none'>(0);
 
-  useEffect(() => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
+  // Fetch all expenses using TanStack Query
+  const { data: expenses = [], isLoading: loading } = useExpenses({
+    userId: user?.id,
+  });
 
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const expenses = await expensesApi.getAll(user.id);
-        
-        // Group expenses by category
-        const categoryMap = new Map<string, number>();
-        let total = 0;
+  // Calculate category data from fetched expenses
+  const { categoryData, totalExpenses } = useMemo(() => {
+    const categoryMap = new Map<string, number>();
+    let total = 0;
 
-        expenses.forEach((expense: Expense) => {
-          const category = expense.category || 'Uncategorized';
-          const currentTotal = categoryMap.get(category) || 0;
-          categoryMap.set(category, currentTotal + expense.amount);
-          total += expense.amount;
-        });
+    expenses.forEach((expense: any) => {
+      const category = expense.category || 'Uncategorized';
+      const currentTotal = categoryMap.get(category) || 0;
+      categoryMap.set(category, currentTotal + expense.amount);
+      total += expense.amount;
+    });
 
-        // Convert to array and calculate percentages
-        const data: CategoryData[] = Array.from(categoryMap.entries())
-          .map(([name, value], index) => ({
-            name,
-            value: Number(value.toFixed(2)),
-            percentage: total > 0 ? Number(((value / total) * 100).toFixed(1)) : 0,
-            color: FALLBACK_COLORS[index % FALLBACK_COLORS.length],
-          }))
-          .sort((a, b) => b.value - a.value); // Sort by amount descending
+    const data: CategoryData[] = Array.from(categoryMap.entries())
+      .map(([name, value], index) => ({
+        name,
+        value: Number(value.toFixed(2)),
+        percentage: total > 0 ? Number(((value / total) * 100).toFixed(1)) : 0,
+        color: FALLBACK_COLORS[index % FALLBACK_COLORS.length],
+      }))
+      .sort((a, b) => b.value - a.value);
 
-        setCategoryData(data);
-        setTotalExpenses(total);
-      } catch (error) {
-        console.error('Failed to load expenses for category breakdown:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [user?.id]);
+    return { categoryData: data, totalExpenses: total };
+  }, [expenses]);
 
   const handleCategoryClick = (category: string) => {
     if (onCategorySelect) {
@@ -299,6 +277,10 @@ export function CategoryBreakdown({ onCategorySelect, selectedCategory }: Catego
                     strokeWidth={1}
                     onClick={(data) => handleCategoryClick(data.name)}
                     style={{ cursor: 'pointer' }}
+                isAnimationActive={true}
+                animationDuration={1200}
+                animationBegin={0}
+                animationEasing="ease-in-out"
                   >
                     {categoryData.map((entry, index) => (
                       <Cell 
@@ -372,6 +354,10 @@ export function CategoryBreakdown({ onCategorySelect, selectedCategory }: Catego
                 style={{ cursor: 'pointer' }}
                 stroke="hsl(var(--background))"
                 strokeWidth={2}
+                isAnimationActive={true}
+                animationDuration={1200}
+                animationBegin={0}
+                animationEasing="ease-in-out"
               >
                 {categoryData.map((entry, index) => (
                   <Cell

@@ -4,6 +4,24 @@ import { expenses, goals, goalItems } from '../db/schema';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 
+// Friendly, accessible color palette with strong borders and pastel backgrounds
+const EXPENSE_COLORS = [
+  { bg: '#FEF3C7', border: '#F59E0B', text: '#92400E' }, // Amber
+  { bg: '#DBEAFE', border: '#3B82F6', text: '#1E40AF' }, // Blue
+  { bg: '#E9D5FF', border: '#A855F7', text: '#6B21A8' }, // Purple
+  { bg: '#FCE7F3', border: '#EC4899', text: '#9F1239' }, // Pink
+  { bg: '#D1FAE5', border: '#10B981', text: '#065F46' }, // Emerald
+  { bg: '#FED7AA', border: '#F97316', text: '#9A3412' }, // Orange
+  { bg: '#F3E8FF', border: '#9333EA', text: '#581C87' }, // Violet
+  { bg: '#CCFBF1', border: '#14B8A6', text: '#134E4A' }, // Teal
+  { bg: '#FEE2E2', border: '#EF4444', text: '#991B1B' }, // Red
+  { bg: '#F0FDF4', border: '#22C55E', text: '#166534' }, // Green
+];
+
+function getRandomColor() {
+  return EXPENSE_COLORS[Math.floor(Math.random() * EXPENSE_COLORS.length)];
+}
+
 export async function expensesRoutes(fastify: FastifyInstance) {
   // Get all expenses for a user (with optional date range)
   fastify.get<{
@@ -117,6 +135,9 @@ export async function expensesRoutes(fastify: FastifyInstance) {
       }
     }
 
+    // Generate random color for new expense
+    const colorData = getRandomColor();
+    
     const result = await db
       .insert(expenses)
       .values({
@@ -124,6 +145,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
         amount,
         description,
         category: category || null,
+        color: JSON.stringify(colorData), // Store as JSON string
         date: new Date(date),
         goalId: goalId || null,
         goalItemId: goalItemId || null,
@@ -176,6 +198,10 @@ export async function expensesRoutes(fastify: FastifyInstance) {
 
     const oldGoalId = existing[0].goalId;
     const oldGoalItemId = existing[0].goalItemId;
+    
+    // If expense doesn't have a color, assign one
+    const needsColor = !existing[0].color;
+    const colorData = needsColor ? getRandomColor() : null;
 
     const updateData: any = {};
     if (amount !== undefined) updateData.amount = amount;
@@ -184,6 +210,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
     if (date !== undefined) updateData.date = new Date(date);
     if (goalId !== undefined) updateData.goalId = goalId;
     if (goalItemId !== undefined) updateData.goalItemId = goalItemId;
+    if (needsColor && colorData) updateData.color = JSON.stringify(colorData);
 
     if (Object.keys(updateData).length === 0) {
       return reply.code(400).send({ error: 'No fields to update' });

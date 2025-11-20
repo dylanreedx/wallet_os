@@ -16,9 +16,10 @@ interface User {
 interface AuthContextType {
   user: User | null;
   sessionId: string | null;
+  loading: boolean;
   login: (email: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
-  loading: boolean;
+  verifyMagicLink: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,13 +54,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, name?: string) => {
-    const data = await auth.login(email, name);
+    // For magic link flow, this just triggers the email
+    await auth.login(email, name);
+  };
+
+  const verifyMagicLink = async (token: string) => {
+    const data = await auth.verify(token);
     setUser(data.user);
     setSessionId(data.sessionId);
-    // Store user in localStorage for persistence
-    if (data.user) {
-      localStorage.setItem('user', JSON.stringify(data.user));
-    }
+    localStorage.setItem('user', JSON.stringify(data.user));
+    localStorage.setItem('sessionId', data.sessionId);
   };
 
   const logout = async () => {
@@ -67,10 +71,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSessionId(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('sessionId');
   };
 
   return (
-    <AuthContext.Provider value={{ user, sessionId, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, sessionId, loading, login, logout, verifyMagicLink }}>
       {children}
     </AuthContext.Provider>
   );

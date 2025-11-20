@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { goals, expenses } from '@/lib/api';
+import { useExpenses } from '@/hooks/useExpenses';
 import {
   Target,
   CheckCircle2,
@@ -22,11 +22,7 @@ interface Goal {
   targetMonth?: string | null;
 }
 
-interface Expense {
-  id: number;
-  goalId: number | null;
-  goalItemId: number | null;
-}
+
 
 interface GoalStatsProps {
   goalsList: Goal[];
@@ -34,37 +30,25 @@ interface GoalStatsProps {
 
 export function GoalStats({ goalsList }: GoalStatsProps) {
   const { user } = useAuth();
-  const [linkedExpensesCount, setLinkedExpensesCount] = useState<number>(0);
-  const [goalsWithLinkedExpenses, setGoalsWithLinkedExpenses] = useState<number>(0);
-  const [loadingExpenses, setLoadingExpenses] = useState(true);
 
-  // Fetch expenses to calculate linked expenses statistics
-  useEffect(() => {
-    if (!user?.id || goalsList.length === 0) {
-      setLoadingExpenses(false);
-      return;
-    }
+  // Fetch expenses using TanStack Query
+  const { data: expensesData = [] } = useExpenses({
+    userId: user?.id,
+  });
 
-    const fetchExpenses = async () => {
-      try {
-        const expensesData = (await expenses.getAll(user.id)) as Expense[];
-        const linkedCount = expensesData.filter((e) => e.goalId !== null).length;
-        const goalIdsWithExpenses = new Set(
-          expensesData
-            .filter((e) => e.goalId !== null)
-            .map((e) => e.goalId as number)
-        );
-        setLinkedExpensesCount(linkedCount);
-        setGoalsWithLinkedExpenses(goalIdsWithExpenses.size);
-      } catch (err) {
-        console.error('Failed to fetch expenses for statistics:', err);
-      } finally {
-        setLoadingExpenses(false);
-      }
+  // Calculate linked expenses statistics
+  const { linkedExpensesCount, goalsWithLinkedExpenses } = useMemo(() => {
+    const linkedCount = expensesData.filter((e: any) => e.goalId !== null).length;
+    const goalIdsWithExpenses = new Set(
+      expensesData
+        .filter((e: any) => e.goalId !== null)
+        .map((e: any) => e.goalId as number)
+    );
+    return {
+      linkedExpensesCount: linkedCount,
+      goalsWithLinkedExpenses: goalIdsWithExpenses.size,
     };
-
-    fetchExpenses();
-  }, [user?.id, goalsList.length]);
+  }, [expensesData]);
 
   // Calculate statistics
   const totalGoals = goalsList.length;
@@ -146,10 +130,8 @@ export function GoalStats({ goalsList }: GoalStatsProps) {
     },
     {
       label: 'Linked Expenses',
-      value: loadingExpenses ? '...' : linkedExpensesCount.toString(),
-      subtitle: loadingExpenses
-        ? ''
-        : `${goalsWithLinkedExpenses} goals with expenses`,
+      value: linkedExpensesCount.toString(),
+      subtitle: `${goalsWithLinkedExpenses} goals with expenses`,
       icon: LinkIcon,
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-50',

@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "dev:mobile": "pnpm dev",
     "build": "tsc",
     "start": "node dist/index.js",
     "db:generate": "drizzle-kit generate",
@@ -20,9 +21,10 @@
     "@libsql/client": "^0.14.0",
     "@wallet-os/shared": "workspace:*",
     "ai": "^4.0.0",
-    "drizzle-orm": "^0.36.4",
     "dotenv": "^16.4.7",
-    "fastify": "^5.1.0"
+    "drizzle-orm": "^0.36.4",
+    "fastify": "^5.1.0",
+    "resend": "^6.5.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

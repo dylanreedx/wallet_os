@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { budget } from '@/lib/api';
+import { useBudgetSuggestions, useAnalyzeBudget } from '@/hooks/useBudget';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -57,30 +57,15 @@ interface SavedAnalysis {
 
 export default function BudgetPage() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<BudgetAnalysisResponse | null>(null);
-  const [savedAnalyses, setSavedAnalyses] = useState<SavedAnalysis[]>([]);
-  const [loadingSaved, setLoadingSaved] = useState(false);
 
-  useEffect(() => {
-    if (user?.id) {
-      loadSavedAnalyses();
-    }
-  }, [user?.id]);
+  // Fetch saved analyses using TanStack Query
+  const { data: savedAnalyses = [], isLoading: loadingSaved } = useBudgetSuggestions({
+    userId: user?.id,
+  });
 
-  const loadSavedAnalyses = async () => {
-    if (!user?.id) return;
-    setLoadingSaved(true);
-    try {
-      const data = await budget.getSuggestions(user.id);
-      setSavedAnalyses(data || []);
-    } catch (err) {
-      console.error('Failed to load saved analyses:', err);
-    } finally {
-      setLoadingSaved(false);
-    }
-  };
+  const analyzeBudgetMutation = useAnalyzeBudget();
 
   const handleAnalyze = async () => {
     if (!user?.id) {
@@ -88,21 +73,16 @@ export default function BudgetPage() {
       return;
     }
 
-    setLoading(true);
     setError(null);
     setResults(null);
 
     try {
-      const data = await budget.analyze(user.id);
+      const data = await analyzeBudgetMutation.mutateAsync({ userId: user.id });
       setResults(data);
-      // Reload saved analyses after new analysis
-      loadSavedAnalyses();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Failed to analyze budget'
       );
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -129,10 +109,10 @@ export default function BudgetPage() {
           <CardContent className="space-y-4">
             <Button
               onClick={handleAnalyze}
-              disabled={loading || !user?.id}
+              disabled={analyzeBudgetMutation.isPending || !user?.id}
               className="w-full"
             >
-              {loading ? 'Analyzing...' : 'Analyze Budget'}
+              {analyzeBudgetMutation.isPending ? 'Analyzing...' : 'Analyze Budget'}
             </Button>
 
             {savedAnalyses.length > 0 && (

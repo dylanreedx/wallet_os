@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
 import { ExpenseForm } from './ExpenseForm';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { monthlyExpenses } from '@/lib/api';
+import { useMonthlyExpenses } from '@/hooks/useMonthlyExpenses';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Expense {
@@ -18,6 +18,7 @@ interface Expense {
   amount: number;
   description: string;
   category: string | null;
+  color: string | null;
   date: string;
   goalId: number | null;
   goalItemId: number | null;
@@ -39,42 +40,85 @@ export function EditExpenseDialog({
 }: EditExpenseDialogProps) {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [recurringExpenses, setRecurringExpenses] = useState<any[]>([]);
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [loadingRecurring, setLoadingRecurring] = useState(true);
+  const dialogContentRef = useRef<HTMLDivElement>(null);
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Load recurring expenses to check if this expense is recurring
+  // Fetch recurring expenses using TanStack Query
+  const { data: recurringExpenses = [] } = useMonthlyExpenses({
+    userId: user?.id,
+    includeInactive: false,
+    enabled: open && !!expense,
+  });
+
+  // Check if this expense is recurring
+  const isRecurring = useMemo(() => {
+    if (!expense) return false;
+    return recurringExpenses.some(
+      (recurring: any) =>
+        recurring.name === expense.description &&
+        Math.abs(recurring.amount - expense.amount) < 0.01 &&
+        recurring.isActive
+    );
+  }, [recurringExpenses, expense]);
+
+  // Detect mobile viewport
   useEffect(() => {
-    const loadRecurring = async () => {
-      if (!user?.id || !expense) {
-        setLoadingRecurring(false);
-        return;
-      }
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-      try {
-        const data = await monthlyExpenses.getAll(user.id, false);
-        const recurringList = Array.isArray(data) ? data : [];
-        setRecurringExpenses(recurringList);
+  // Handle visualViewport API for keyboard awareness
+  useEffect(() => {
+    if (!isMobile || !open) return;
 
-        // Check if this expense matches a recurring monthly expense
-        const matches = recurringList.some(
-          (recurring) =>
-            recurring.name === expense.description &&
-            Math.abs(recurring.amount - expense.amount) < 0.01 &&
-            recurring.isActive
-        );
-        setIsRecurring(matches);
-      } catch (err) {
-        console.error('Failed to load recurring expenses:', err);
-      } finally {
-        setLoadingRecurring(false);
+    const updateViewportHeight = () => {
+      if (window.visualViewport) {
+        setViewportHeight(window.visualViewport.height);
+      } else {
+        setViewportHeight(window.innerHeight);
       }
     };
 
-    if (open && expense) {
-      loadRecurring();
+    updateViewportHeight();
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateViewportHeight);
+      return () => {
+        window.visualViewport?.removeEventListener('resize', updateViewportHeight);
+      };
+    } else {
+      window.addEventListener('resize', updateViewportHeight);
+      return () => {
+        window.removeEventListener('resize', updateViewportHeight);
+      };
     }
-  }, [user?.id, expense, open]);
+  }, [isMobile, open]);
+
+  // Auto-scroll focused input into view
+  useEffect(() => {
+    if (!isMobile || !open) return;
+
+    const handleFocus = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && dialogContentRef.current?.contains(target)) {
+        // Small delay to ensure keyboard has appeared
+        setTimeout(() => {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+        }, 300);
+      }
+    };
+
+    document.addEventListener('focusin', handleFocus);
+    return () => document.removeEventListener('focusin', handleFocus);
+  }, [isMobile, open]);
 
   const handleSuccess = (updatedExpense: any) => {
     onOpenChange(false);
@@ -93,18 +137,29 @@ export function EditExpenseDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        ref={dialogContentRef}
         className={cn(
-          'max-h-[90vh] overflow-y-auto',
+          'overflow-y-auto',
           'sm:max-w-lg',
-          // Mobile bottom sheet style - override default positioning
-          'bottom-0 left-0 right-0 top-auto translate-y-0 translate-x-0',
-          'sm:bottom-auto sm:left-[50%] sm:right-auto sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%]',
+          // Mobile bottom sheet style - override default positioning with !important
+          '!bottom-0 !left-0 !right-0 !top-auto !translate-y-0 !translate-x-0',
+          'sm:!bottom-auto sm:!left-[50%] sm:!right-auto sm:!top-[50%] sm:!translate-x-[-50%] sm:!translate-y-[-50%]',
           'rounded-t-2xl rounded-b-none sm:rounded-lg',
           'border-b-0 sm:border-b',
           // Mobile slide animations
           'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
-          'sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95'
+          'sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95',
+          'p-3 sm:p-6 pb-6 sm:pb-6' // Tighter padding on mobile
         )}
+        style={{
+          maxHeight: isMobile && viewportHeight
+            ? `${viewportHeight - 20}px`
+            : isMobile
+            ? '90vh'
+            : undefined,
+          width: isMobile ? '100%' : undefined,
+          maxWidth: isMobile ? '100%' : undefined,
+        }}
         onInteractOutside={(e) => {
           // Prevent closing the dialog when clicking inside a popover (like date picker)
           const target = e.target as HTMLElement;
@@ -123,11 +178,13 @@ export function EditExpenseDialog({
           }
         }}
       >
-        <DialogHeader>
-          <DialogTitle>Edit Expense</DialogTitle>
-          <DialogDescription>
-            Update the details of your expense.
-          </DialogDescription>
+        <DialogHeader className={cn(isMobile && 'pb-2')}>
+          <DialogTitle className={cn(isMobile && 'text-base')}>Edit Expense</DialogTitle>
+          {!isMobile && (
+            <DialogDescription className="text-xs">
+              Update the details of your expense.
+            </DialogDescription>
+          )}
         </DialogHeader>
         <ExpenseForm
           onSubmit={handleSuccess}
