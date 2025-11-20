@@ -70,8 +70,6 @@ export async function goalsRoutes(fastify: FastifyInstance) {
         deadline: new Date(deadline),
         targetMonth: targetMonth || null,
         description: description || null,
-        createdAt: new Date(),
-        updatedAt: new Date()
       })
       .returning();
 

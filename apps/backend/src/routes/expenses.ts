@@ -149,7 +149,6 @@ export async function expensesRoutes(fastify: FastifyInstance) {
         date: new Date(date),
         goalId: goalId || null,
         goalItemId: goalItemId || null,
-        createdAt: new Date(),
       })
       .returning();
 
