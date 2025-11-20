@@ -1,3 +1,4 @@
+// Force schema update
 import {
   sqliteTable,
   text,

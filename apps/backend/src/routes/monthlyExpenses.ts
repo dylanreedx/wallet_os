@@ -61,7 +61,7 @@ export async function monthlyExpensesRoutes(fastify: FastifyInstance) {
         isActive: isActive !== undefined ? isActive : true,
         createdAt: new Date(),
         updatedAt: new Date(),
-      } as any)
+      })
       .returning();
 
     return reply.code(201).send(result[0]);
@@ -106,7 +106,7 @@ export async function monthlyExpensesRoutes(fastify: FastifyInstance) {
 
     const result = await db
       .update(monthlyExpenses)
-      .set(updateData as any)
+      .set(updateData)
       .where(eq(monthlyExpenses.id, parseInt(id)))
       .returning();
 
