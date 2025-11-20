@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../db';
-import { sharedGoals, goals, users } from '../db/schema';
+import { sharedGoals, goals, users } from '../db/dbSchema';
 import { eq, and, or } from 'drizzle-orm';
 
 export async function socialRoutes(fastify: FastifyInstance) {

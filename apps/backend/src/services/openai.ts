@@ -1,7 +1,7 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 import { db } from '../db';
-import { expenses, goals, monthlyExpenses, users } from '../db/schema';
+import { expenses, goals, monthlyExpenses, users } from '../db/dbSchema';
 import { eq, gte, lte, and } from 'drizzle-orm';
 
 const openai = createOpenAI({

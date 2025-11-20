@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { analyzeBudget } from '../services/openai';
 import { db } from '../db';
-import { budgetSuggestions } from '../db/schema';
+import { budgetSuggestions } from '../db/dbSchema';
 import { eq, and } from 'drizzle-orm';
 
 export async function budgetRoutes(fastify: FastifyInstance) {

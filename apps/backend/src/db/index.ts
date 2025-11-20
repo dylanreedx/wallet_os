@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import * as dotenv from 'dotenv';
-import * as schema from './schema';
+import * as schema from './dbSchema';
 import path from 'path';
 
 // Load .env from root directory

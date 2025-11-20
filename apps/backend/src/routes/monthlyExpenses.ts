@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../db';
-import { monthlyExpenses } from '../db/schema';
+import { monthlyExpenses } from '../db/dbSchema';
 import { eq, and, desc } from 'drizzle-orm';
 
 export async function monthlyExpensesRoutes(fastify: FastifyInstance) {
