@@ -4,9 +4,9 @@
 
 ## Board Status
 
-- **Total Tickets**: 97
+- **Total Tickets**: 98
 - **DONE**: 67 (Phases 1-3 complete, Phase 4 enhanced, Phase 9 started, Phase 10 started)
-- **TODO**: 30 (Phases 4-10 remaining)
+- **TODO**: 31 (Phases 4-11 remaining)
 - **IN PROGRESS**: 0
 - **QA**: 0
 
@@ -164,6 +164,10 @@
 - [P10-006: Performance](./P10-006-performance.md)
 - [P10-007: Testing](./P10-007-testing.md)
 - [P10-008: Documentation](./P10-008-documentation.md)
+
+### Phase 11: Deployment & Infrastructure (1 ticket)
+
+- [P11-001: Deployment Setup](./P11-001-deployment-setup.md)
 
 ---
 

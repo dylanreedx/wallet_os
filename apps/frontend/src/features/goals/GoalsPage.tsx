@@ -69,7 +69,7 @@ export default function GoalsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {goalsList.map((goal) => (
+            {goalsList.map((goal: any) => (
               <GoalCard
                 key={goal.id}
                 goal={goal}

@@ -199,7 +199,6 @@ Format the response as JSON with this structure:
       model: openai('gpt-4o-mini'),
       system: 'You are a financial advisor helping users manage their budgets and achieve financial goals.',
       prompt: prompt,
-      responseFormat: { type: 'json_object' },
     });
 
     const response = JSON.parse(result.text || '{}');

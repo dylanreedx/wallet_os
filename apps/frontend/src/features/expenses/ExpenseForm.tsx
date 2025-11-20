@@ -117,7 +117,7 @@ export function ExpenseForm({
           }, {} as Record<string, number>);
           
           const sorted = Object.entries(categoryCounts)
-            .sort(([, a], [, b]) => b - a)
+            .sort(([, a]: any, [, b]: any) => b - a)
             .map(([category]) => category);
           
           setMostUsedCategories(sorted);
@@ -229,7 +229,7 @@ export function ExpenseForm({
             
             // Find monthly expense that matched the OLD expense data
             const oldMatchingRecurring = existingRecurring.find(
-              (recurring) =>
+              (recurring: any) =>
                 recurring.name === originalExpense.description &&
                 Math.abs(recurring.amount - originalExpense.amount) < 0.01 &&
                 recurring.isActive
@@ -237,7 +237,7 @@ export function ExpenseForm({
 
             // Find monthly expense that matches the NEW expense data
             const newMatchingRecurring = existingRecurring.find(
-              (recurring) =>
+              (recurring: any) =>
                 recurring.name === values.description &&
                 Math.abs(recurring.amount - values.amount) < 0.01 &&
                 recurring.isActive

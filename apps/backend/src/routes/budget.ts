@@ -46,12 +46,12 @@ export async function budgetRoutes(fastify: FastifyInstance) {
           ? { message: dbError.message, name: dbError.name, stack: dbError.stack }
           : { error: String(dbError) };
         
-        fastify.log.error('Failed to save budget suggestions to database:', {
+        fastify.log.error({
           userId,
           month: analysisMonth,
           error: errorDetails,
           suggestionsSize: JSON.stringify(result).length
-        });
+        }, 'Failed to save budget suggestions to database');
         
         // Log specific error types for debugging
         if (dbError instanceof Error) {
@@ -65,7 +65,7 @@ export async function budgetRoutes(fastify: FastifyInstance) {
 
       return reply.send(result);
     } catch (error) {
-      fastify.log.error('Budget analysis error:', error);
+      fastify.log.error(error, 'Budget analysis error');
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return reply.code(500).send({ 
         error: 'Failed to analyze budget',

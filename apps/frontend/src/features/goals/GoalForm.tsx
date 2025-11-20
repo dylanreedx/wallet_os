@@ -83,20 +83,20 @@ export function GoalForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const form = useForm<GoalFormValues>({
-    resolver: zodResolver(goalFormSchema),
+    resolver: zodResolver(goalFormSchema) as any,
     defaultValues: {
       name: defaultValues?.name || '',
       description: defaultValues?.description || '',
       deadline: defaultValues?.deadline || format(new Date(), 'yyyy-MM-dd'),
       targetMonth: defaultValues?.targetMonth || undefined,
       items: defaultValues?.items || [
-        { name: '', price: undefined, quantity: 1 },
+        { name: '', price: undefined as any, quantity: 1 },
       ],
     },
   });
 
   const { fields, append, remove, replace } = useFieldArray({
-    control: form.control,
+    control: form.control as any,
     name: 'items',
   });
 
@@ -227,7 +227,7 @@ export function GoalForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="name"
           render={({ field }) => (
             <FormItem>
@@ -245,7 +245,7 @@ export function GoalForm({
         />
 
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="description"
           render={({ field }) => (
             <FormItem>
@@ -264,7 +264,7 @@ export function GoalForm({
         />
 
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="deadline"
           render={({ field }) => (
             <FormItem>
@@ -314,7 +314,7 @@ export function GoalForm({
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name={`items.${index}.name`}
                       render={({ field }) => (
                         <FormItem className="sm:col-span-2">
@@ -331,7 +331,7 @@ export function GoalForm({
                     />
 
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name={`items.${index}.price`}
                       render={({ field }) => (
                         <FormItem>
@@ -357,7 +357,7 @@ export function GoalForm({
                     />
 
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name={`items.${index}.quantity`}
                       render={({ field }) => (
                         <FormItem>

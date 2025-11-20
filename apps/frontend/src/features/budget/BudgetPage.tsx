@@ -121,7 +121,7 @@ export default function BudgetPage() {
                 <Select
                   onValueChange={(value) => {
                     const selected = savedAnalyses.find(
-                      (a) => a.id.toString() === value
+                      (a: any) => a.id.toString() === value
                     );
                     if (selected) {
                       handleLoadSavedAnalysis(selected);
@@ -132,7 +132,7 @@ export default function BudgetPage() {
                     <SelectValue placeholder="Select a previous analysis" />
                   </SelectTrigger>
                   <SelectContent>
-                    {savedAnalyses.map((analysis) => {
+                    {savedAnalyses.map((analysis: any) => {
                       const date = new Date(analysis.createdAt);
                       const monthName = date.toLocaleDateString('en-US', {
                         month: 'long',

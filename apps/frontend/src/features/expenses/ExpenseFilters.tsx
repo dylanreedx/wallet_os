@@ -200,14 +200,14 @@ export function ExpenseFiltersComponent({
         {/* Start Date */}
         <DatePicker
           value={filters.startDate || undefined}
-          onChange={(date) => handleStartDateChange(date || null)}
+          onChange={(date) => handleStartDateChange(date || '')}
           placeholder="Start Date"
         />
 
         {/* End Date */}
         <DatePicker
           value={filters.endDate || undefined}
-          onChange={(date) => handleEndDateChange(date || null)}
+          onChange={(date) => handleEndDateChange(date || '')}
           placeholder="End Date"
         />
       </div>

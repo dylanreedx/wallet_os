@@ -334,7 +334,7 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
   };
 
   const handleDelete = (id: number) => {
-    const expense = expenses.find((e) => e.id === id);
+    const expense = expenses.find((e: any) => e.id === id);
     if (expense) {
       setDeleteConfirmExpense(expense);
     }
@@ -384,7 +384,7 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
 
   const isRecurring = (expense: Expense) => {
     return recurringExpensesList.some(
-      (recurring) =>
+      (recurring: any) =>
         recurring.name === expense.description &&
         Math.abs(recurring.amount - expense.amount) < 0.01 &&
         recurring.isActive
