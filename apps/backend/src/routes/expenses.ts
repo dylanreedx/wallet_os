@@ -91,7 +91,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
       .set({
         currentAmount: newCurrentAmount,
         updatedAt: new Date(),
-      } as any)
+      })
       .where(eq(goals.id, goalId));
   }
 
@@ -149,7 +149,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
         date: new Date(date),
         goalId: goalId || null,
         goalItemId: goalItemId || null,
-      } as any)
+      })
       .returning();
 
     // Update goal progress if linked
@@ -160,7 +160,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
       if (goalItemId) {
         await db
           .update(goalItems)
-          .set({ purchased: true } as any)
+          .set({ purchased: true })
           .where(eq(goalItems.id, goalItemId));
       }
     }
@@ -264,7 +264,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
       if (oldItemExpenses.length === 0) {
         await db
           .update(goalItems)
-          .set({ purchased: false } as any)
+          .set({ purchased: false })
           .where(eq(goalItems.id, oldGoalItemId));
       }
     }
@@ -272,7 +272,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
     if (goalItemId && goalItemId !== oldGoalItemId) {
       await db
         .update(goalItems)
-        .set({ purchased: true } as any)
+        .set({ purchased: true })
         .where(eq(goalItems.id, goalItemId));
     }
 
@@ -319,7 +319,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
         if (remainingExpenses.length === 0) {
           await db
             .update(goalItems)
-            .set({ purchased: false } as any)
+            .set({ purchased: false })
             .where(eq(goalItems.id, goalItemId));
         }
       }

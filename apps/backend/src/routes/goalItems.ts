@@ -78,7 +78,7 @@ export async function goalItemsRoutes(fastify: FastifyInstance) {
         quantity: quantity || 1,
         purchased: false,
         createdAt: new Date()
-      } as any)
+      })
       .returning();
 
     return reply.code(201).send(result[0]);
@@ -109,7 +109,7 @@ export async function goalItemsRoutes(fastify: FastifyInstance) {
 
     const result = await db
       .update(goalItems)
-      .set(updateData as any)
+      .set(updateData)
       .where(
         and(
           eq(goalItems.goalId, parseInt(goalId)),
