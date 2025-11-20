@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../db';
-import { goalItems, goals } from '../db/dbSchema';
+import { goalItems, goals } from '../db';
 import { eq, and } from 'drizzle-orm';
 
 export async function goalItemsRoutes(fastify: FastifyInstance) {
