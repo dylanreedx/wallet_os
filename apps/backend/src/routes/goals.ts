@@ -70,7 +70,7 @@ export async function goalsRoutes(fastify: FastifyInstance) {
         deadline: new Date(deadline),
         targetMonth: targetMonth || null,
         description: description || null,
-      })
+      } as any)
       .returning();
 
     return reply.code(201).send(result[0]);
@@ -106,7 +106,7 @@ export async function goalsRoutes(fastify: FastifyInstance) {
 
     const result = await db
       .update(goals)
-      .set(updateData)
+      .set(updateData as any)
       .where(eq(goals.id, parseInt(id)))
       .returning();
 
