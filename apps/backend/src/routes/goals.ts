@@ -67,7 +67,6 @@ export async function goalsRoutes(fastify: FastifyInstance) {
         userId,
         name,
         targetAmount,
-        currentAmount: 0,
         deadline: new Date(deadline),
         targetMonth: targetMonth || null,
         description: description || null,
