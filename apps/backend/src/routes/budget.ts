@@ -29,14 +29,12 @@ export async function budgetRoutes(fastify: FastifyInstance) {
           .values({
             userId,
             month: analysisMonth,
-            suggestions: JSON.stringify(result),
-            createdAt: new Date()
+            suggestions: JSON.stringify(result)
           })
           .onConflictDoUpdate({
             target: [budgetSuggestions.userId, budgetSuggestions.month],
             set: {
-              suggestions: JSON.stringify(result),
-              createdAt: new Date()
+              suggestions: JSON.stringify(result)
             }
           });
         fastify.log.info(`Budget suggestions saved for user ${userId}, month ${analysisMonth}`);
