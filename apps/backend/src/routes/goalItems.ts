@@ -69,16 +69,18 @@ export async function goalItemsRoutes(fastify: FastifyInstance) {
       return reply.code(404).send({ error: 'Goal not found' });
     }
 
+    const insertValues = {
+      goalId: parseInt(id),
+      name,
+      price,
+      quantity: quantity || 1,
+      purchased: false,
+      createdAt: new Date(),
+    };
+
     const result = await db
       .insert(goalItems)
-      .values({
-        goalId: parseInt(id),
-        name,
-        price,
-        quantity: quantity || 1,
-        purchased: false,
-        createdAt: new Date()
-      })
+      .values(insertValues as any)
       .returning();
 
     return reply.code(201).send(result[0]);
