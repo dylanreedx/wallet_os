@@ -56,14 +56,16 @@ export async function socialRoutes(fastify: FastifyInstance) {
       return reply.code(409).send({ error: 'Goal already shared with this user' });
     }
 
+    const insertValues = {
+      goalId,
+      userId,
+      role,
+      createdAt: new Date(),
+    };
+
     const result = await db
       .insert(sharedGoals)
-      .values({
-        goalId,
-        userId,
-        role,
-        createdAt: new Date()
-      })
+      .values(insertValues as any)
       .returning();
 
     return reply.code(201).send(result[0]);
@@ -125,7 +127,7 @@ export async function socialRoutes(fastify: FastifyInstance) {
 
     const result = await db
       .update(sharedGoals)
-      .set({ role })
+      .set({ role } as any)
       .where(
         and(
           eq(sharedGoals.goalId, parseInt(goalId)),
