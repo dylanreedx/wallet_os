@@ -55,21 +55,28 @@ export async function goalsRoutes(fastify: FastifyInstance) {
       description?: string;
     };
   }>('/api/goals', async (request, reply) => {
-    const { userId, name, targetAmount, deadline, targetMonth, description } = request.body;
+    const { userId, name, targetAmount, deadline, targetMonth, description } =
+      request.body;
 
     if (!userId || !name || !targetAmount || !deadline) {
       return reply.code(400).send({ error: 'Missing required fields' });
     }
 
+    const baseValues = {
+      userId,
+      name,
+      targetAmount,
+      deadline: new Date(deadline),
+      description: description || null,
+    };
+
     const result = await db
       .insert(goals)
       .values({
-        userId,
-        name,
-        targetAmount,
-        deadline: new Date(deadline),
-        targetMonth: targetMonth || null,
-        description: description || null,
+        ...baseValues,
+        ...(targetMonth !== undefined
+          ? { targetMonth: targetMonth || null }
+          : {}),
       })
       .returning();
 
@@ -89,7 +96,14 @@ export async function goalsRoutes(fastify: FastifyInstance) {
     };
   }>('/api/goals/:id', async (request, reply) => {
     const { id } = request.params;
-    const { name, targetAmount, currentAmount, deadline, targetMonth, description } = request.body;
+    const {
+      name,
+      targetAmount,
+      currentAmount,
+      deadline,
+      targetMonth,
+      description,
+    } = request.body;
 
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
