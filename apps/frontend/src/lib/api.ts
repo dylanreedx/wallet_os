@@ -1,5 +1,9 @@
-// Use relative URLs in development to leverage Vite proxy, or absolute URL if provided via env
-const API_BASE = import.meta.env.VITE_API_URL || '';
+// API base URL:
+// - In production, default to the deployed backend if VITE_API_URL isn't set
+// - In development, default to '' so we can rely on Vite's dev proxy (or localhost config)
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? '' : 'https://wallet-os-backend.vercel.app');
 
 async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
   const sessionId = localStorage.getItem('sessionId');
