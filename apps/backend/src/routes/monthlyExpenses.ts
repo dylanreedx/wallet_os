@@ -50,18 +50,18 @@ export async function monthlyExpensesRoutes(fastify: FastifyInstance) {
       return reply.code(400).send({ error: 'userId, name, and amount are required' });
     }
 
+    const insertValues = {
+      userId,
+      name,
+      amount,
+      category: category || null,
+      description: description || null,
+      isActive: isActive !== undefined ? isActive : true,
+    };
+
     const result = await db
       .insert(monthlyExpenses)
-      .values({
-        userId,
-        name,
-        amount,
-        category: category || null,
-        description: description || null,
-        isActive: isActive !== undefined ? isActive : true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
+      .values(insertValues as any)
       .returning();
 
     return reply.code(201).send(result[0]);
@@ -106,7 +106,7 @@ export async function monthlyExpensesRoutes(fastify: FastifyInstance) {
 
     const result = await db
       .update(monthlyExpenses)
-      .set(updateData)
+      .set(updateData as any)
       .where(eq(monthlyExpenses.id, parseInt(id)))
       .returning();
 
