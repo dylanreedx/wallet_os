@@ -1,7 +1,8 @@
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import * as dotenv from 'dotenv';
-import * as schema from './dbSchema';
+// Use explicit .js extension so Node ESM can resolve this in the deployed bundle
+import * as schema from './dbSchema.js';
 import path from 'path';
 
 // Load .env from root directory
@@ -17,5 +18,14 @@ const client = createClient({
 
 export const db = drizzle(client, { schema });
 export { schema };
-export { expenses, goals, goalItems, users, magicLinks, budgetSuggestions, monthlyExpenses, sharedGoals } from './dbSchema';
+export {
+  expenses,
+  goals,
+  goalItems,
+  users,
+  magicLinks,
+  budgetSuggestions,
+  monthlyExpenses,
+  sharedGoals,
+} from './dbSchema.js';
 
