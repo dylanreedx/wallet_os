@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { db } from '../db/index.js';
 import { users, magicLinks } from '../db/dbSchema.js';
 import { eq } from 'drizzle-orm';
-import { createSession, deleteSession } from '../middleware/auth';
+import { createSession, deleteSession } from '../middleware/auth.js';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
