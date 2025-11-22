@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { db } from '../db';
-import { expenses, goals, goalItems } from '../db';
+import { db } from '../db/index.js';
+import { expenses, goals, goalItems } from '../db/dbSchema.js';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 

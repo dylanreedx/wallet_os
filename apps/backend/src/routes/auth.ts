@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { db } from '../db';
-import { users, magicLinks } from '../db';
+import { db } from '../db/index.js';
+import { users, magicLinks } from '../db/dbSchema.js';
 import { eq } from 'drizzle-orm';
 import { createSession, deleteSession } from '../middleware/auth';
 import { Resend } from 'resend';
