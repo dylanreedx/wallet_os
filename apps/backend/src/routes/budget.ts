@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { analyzeBudget } from '../services/openai';
+import { analyzeBudget } from '../services/openai.js';
 import { db } from '../db/index.js';
 import { budgetSuggestions } from '../db/dbSchema.js';
 import { eq, and } from 'drizzle-orm';
