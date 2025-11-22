@@ -1,13 +1,14 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import dotenv from 'dotenv';
-import { expensesRoutes } from './routes/expenses';
-import { goalsRoutes } from './routes/goals';
-import { goalItemsRoutes } from './routes/goalItems';
-import { budgetRoutes } from './routes/budget';
-import { socialRoutes } from './routes/social';
-import { authRoutes } from './routes/auth';
-import { monthlyExpensesRoutes } from './routes/monthlyExpenses';
+// Important for Node ESM on Vercel: use .js extensions so compiled output resolves correctly
+import { expensesRoutes } from './routes/expenses.js';
+import { goalsRoutes } from './routes/goals.js';
+import { goalItemsRoutes } from './routes/goalItems.js';
+import { budgetRoutes } from './routes/budget.js';
+import { socialRoutes } from './routes/social.js';
+import { authRoutes } from './routes/auth.js';
+import { monthlyExpensesRoutes } from './routes/monthlyExpenses.js';
 
 dotenv.config();
 
