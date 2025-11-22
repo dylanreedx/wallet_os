@@ -31,6 +31,6 @@
     "@wallet-os/config": "workspace:*",
     "drizzle-kit": "^0.30.0",
     "tsx": "^4.20.6",
-    "typescript": "^5.7.2"
+    "typescript": "5.7.2"
   }
 }
