@@ -86,13 +86,12 @@ export async function expensesRoutes(fastify: FastifyInstance) {
 
     const newCurrentAmount = linkedExpenses[0]?.total || 0;
 
-    await db
-      .update(goals)
-      .set({
-        currentAmount: newCurrentAmount,
-        updatedAt: new Date(),
-      })
-      .where(eq(goals.id, goalId));
+    const goalUpdate = {
+      currentAmount: newCurrentAmount,
+      updatedAt: new Date(),
+    };
+
+    await db.update(goals).set(goalUpdate).where(eq(goals.id, goalId));
   }
 
   // Create expense
@@ -137,20 +136,23 @@ export async function expensesRoutes(fastify: FastifyInstance) {
 
     // Generate random color for new expense
     const colorData = getRandomColor();
-    
-    const result = await db
-      .insert(expenses)
-      .values({
-        userId,
-        amount,
-        description,
-        category: category || null,
-        color: JSON.stringify(colorData), // Store as JSON string
-        date: new Date(date),
-        goalId: goalId || null,
-        goalItemId: goalItemId || null,
-      })
-      .returning();
+
+    const baseValues = {
+      userId,
+      amount,
+      description,
+      color: JSON.stringify(colorData), // Store as JSON string
+      date: new Date(date),
+      goalId: goalId || null,
+      goalItemId: goalItemId || null,
+    };
+
+    const insertValues =
+      category !== undefined
+        ? { ...baseValues, category: category || null }
+        : baseValues;
+
+    const result = await db.insert(expenses).values(insertValues).returning();
 
     // Update goal progress if linked
     if (goalId) {
@@ -202,16 +204,18 @@ export async function expensesRoutes(fastify: FastifyInstance) {
     const needsColor = !existing[0].color;
     const colorData = needsColor ? getRandomColor() : null;
 
-    const updateData: any = {};
-    if (amount !== undefined) updateData.amount = amount;
-    if (description !== undefined) updateData.description = description;
-    if (category !== undefined) updateData.category = category;
-    if (date !== undefined) updateData.date = new Date(date);
-    if (goalId !== undefined) updateData.goalId = goalId;
-    if (goalItemId !== undefined) updateData.goalItemId = goalItemId;
-    if (needsColor && colorData) updateData.color = JSON.stringify(colorData);
+    const baseUpdate: Record<string, unknown> = {};
+    if (amount !== undefined) baseUpdate.amount = amount;
+    if (description !== undefined) baseUpdate.description = description;
+    if (category !== undefined) baseUpdate.category = category;
+    if (date !== undefined) baseUpdate.date = new Date(date);
+    if (goalId !== undefined) baseUpdate.goalId = goalId;
+    if (goalItemId !== undefined) baseUpdate.goalItemId = goalItemId;
+    if (needsColor && colorData) {
+      baseUpdate.color = JSON.stringify(colorData);
+    }
 
-    if (Object.keys(updateData).length === 0) {
+    if (Object.keys(baseUpdate).length === 0) {
       return reply.code(400).send({ error: 'No fields to update' });
     }
 
@@ -240,7 +244,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
 
     const result = await db
       .update(expenses)
-      .set(updateData)
+      .set(baseUpdate)
       .where(eq(expenses.id, parseInt(id)))
       .returning();
 
@@ -262,17 +266,19 @@ export async function expensesRoutes(fastify: FastifyInstance) {
         .limit(1);
 
       if (oldItemExpenses.length === 0) {
+        const markNotPurchased = { purchased: false };
         await db
           .update(goalItems)
-          .set({ purchased: false })
+          .set(markNotPurchased)
           .where(eq(goalItems.id, oldGoalItemId));
       }
     }
 
     if (goalItemId && goalItemId !== oldGoalItemId) {
+      const markPurchased = { purchased: true };
       await db
         .update(goalItems)
-        .set({ purchased: true })
+        .set(markPurchased)
         .where(eq(goalItems.id, goalItemId));
     }
 
