@@ -600,7 +600,7 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
       <EditExpenseDialog
         expense={editingExpense}
         open={editingExpense !== null}
-        onOpenChange={(open) => !open && setEditingExpense(null)}
+        onOpenChange={(open: boolean) => !open && setEditingExpense(null)}
         onSuccess={handleEditSuccess}
       />
 

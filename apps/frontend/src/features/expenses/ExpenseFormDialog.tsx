@@ -55,7 +55,7 @@ export function ExpenseFormDialog({
           'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
           'sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95'
         )}
-        onInteractOutside={(e) => {
+        onInteractOutside={(e: any) => {
           // Prevent closing the dialog when clicking inside a popover (like date picker)
           const target = e.target as HTMLElement;
           // Check both the target and the event's composed path for popover content

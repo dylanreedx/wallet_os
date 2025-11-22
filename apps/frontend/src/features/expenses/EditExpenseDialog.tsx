@@ -160,7 +160,7 @@ export function EditExpenseDialog({
           width: isMobile ? '100%' : undefined,
           maxWidth: isMobile ? '100%' : undefined,
         }}
-        onInteractOutside={(e) => {
+        onInteractOutside={(e: any) => {
           // Prevent closing the dialog when clicking inside a popover (like date picker)
           const target = e.target as HTMLElement;
           // Check both the target and the event's composed path for popover content
