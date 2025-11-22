@@ -29,19 +29,18 @@ export async function authRoutes(fastify: FastifyInstance) {
       .limit(1);
 
     if (user.length === 0) {
+      const insertUser = {
+        email,
+        name: name || null,
+      };
       const newUser = await db
         .insert(users)
-        .values({
-          email,
-          name: name || null,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        })
+        .values(insertUser as any)
         .returning();
       user = newUser;
     } else if (name && user[0].name !== name) {
       // Update name if provided and different
-      await db.update(users).set({ name }).where(eq(users.id, user[0].id));
+      await db.update(users).set({ name } as any).where(eq(users.id, user[0].id));
     }
 
     // 2. Generate Magic Link Token
@@ -124,7 +123,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     // 2. Mark token as used
     await db
       .update(magicLinks)
-      .set({ used: true })
+      .set({ used: true } as any)
       .where(eq(magicLinks.id, link[0].id));
 
     // 3. Get User
@@ -209,7 +208,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       .set({
         monthlyIncome,
         updatedAt: new Date()
-      })
+      } as any)
       .where(eq(users.id, userId))
       .returning();
 
