@@ -91,7 +91,11 @@ export async function expensesRoutes(fastify: FastifyInstance) {
       updatedAt: new Date(),
     };
 
-    await db.update(goals).set(goalUpdate).where(eq(goals.id, goalId));
+    // Narrow cast here to sidestep Drizzle+TS generics being over‑strict on Vercel.
+    await db
+      .update(goals)
+      .set(goalUpdate as any)
+      .where(eq(goals.id, goalId));
   }
 
   // Create expense
@@ -162,7 +166,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
       if (goalItemId) {
         await db
           .update(goalItems)
-          .set({ purchased: true })
+          .set({ purchased: true } as any)
           .where(eq(goalItems.id, goalItemId));
       }
     }
@@ -199,7 +203,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
 
     const oldGoalId = existing[0].goalId;
     const oldGoalItemId = existing[0].goalItemId;
-    
+
     // If expense doesn't have a color, assign one
     const needsColor = !existing[0].color;
     const colorData = needsColor ? getRandomColor() : null;
@@ -266,7 +270,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
         .limit(1);
 
       if (oldItemExpenses.length === 0) {
-        const markNotPurchased = { purchased: false };
+        const markNotPurchased = { purchased: false } as any;
         await db
           .update(goalItems)
           .set(markNotPurchased)
@@ -275,7 +279,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
     }
 
     if (goalItemId && goalItemId !== oldGoalItemId) {
-      const markPurchased = { purchased: true };
+      const markPurchased = { purchased: true } as any;
       await db
         .update(goalItems)
         .set(markPurchased)
@@ -325,7 +329,7 @@ export async function expensesRoutes(fastify: FastifyInstance) {
         if (remainingExpenses.length === 0) {
           await db
             .update(goalItems)
-            .set({ purchased: false })
+            .set({ purchased: false } as any)
             .where(eq(goalItems.id, goalItemId));
         }
       }
