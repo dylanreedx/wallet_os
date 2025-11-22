@@ -36,3 +36,4 @@ Define database schema for all tables: users, expenses, goals, goal_items, share
 
 
 
+
