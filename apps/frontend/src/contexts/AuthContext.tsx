@@ -20,6 +20,7 @@ interface AuthContextType {
   login: (email: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
   verifyMagicLink: (token: string) => Promise<void>;
+  verifyCode: (email: string, code: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,6 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('sessionId', data.sessionId);
   };
 
+   const verifyCode = async (email: string, code: string) => {
+    const data = await auth.verifyCode(email, code);
+    setUser(data.user);
+    setSessionId(data.sessionId);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    localStorage.setItem('sessionId', data.sessionId);
+  };
+
   const logout = async () => {
     await auth.logout();
     setUser(null);
@@ -75,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, sessionId, loading, login, logout, verifyMagicLink }}>
+    <AuthContext.Provider value={{ user, sessionId, loading, login, logout, verifyMagicLink, verifyCode }}>
       {children}
     </AuthContext.Provider>
   );

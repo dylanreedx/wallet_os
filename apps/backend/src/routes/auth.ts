@@ -1,11 +1,22 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../db/index.js';
 import { users, magicLinks } from '../db/dbSchema.js';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { createSession, deleteSession } from '../middleware/auth.js';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Derive a short, user-friendly login code from a magic link token
+// This avoids schema changes by computing the code on the fly.
+function deriveLoginCode(token: string): string {
+  // Take a simple deterministic slice and normalize to uppercase
+  // Format: XXX-XXX for better readability when typing on mobile
+  const clean = token.replace(/-/g, '').toUpperCase();
+  const part1 = clean.slice(0, 3);
+  const part2 = clean.slice(3, 6);
+  return `${part1}-${part2}`;
+}
 
 export async function authRoutes(fastify: FastifyInstance) {
   // Login - Generate Magic Link
@@ -53,6 +64,8 @@ export async function authRoutes(fastify: FastifyInstance) {
       expiresAt,
     });
 
+    const loginCode = deriveLoginCode(token);
+
     // 3. Send Email
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const magicLinkUrl = `${frontendUrl}/auth/verify?token=${token}`;
@@ -68,6 +81,10 @@ export async function authRoutes(fastify: FastifyInstance) {
               <h2>Welcome to Wallet OS</h2>
               <p>Click the button below to securely log in to your account.</p>
               <a href="${magicLinkUrl}" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">Log In</a>
+              <p style="margin-top: 16px; font-size: 14px;">
+                Or enter this code in the Wallet OS app if you have it installed:
+                <strong style="font-size: 16px; letter-spacing: 2px;">${loginCode}</strong>
+              </p>
               <p style="color: #666; font-size: 14px;">If you didn't request this, you can safely ignore this email.</p>
             </div>
           `
@@ -87,6 +104,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       console.log('🔐 MAGIC LINK GENERATED (No API Key)');
       console.log(`📧 To: ${email}`);
       console.log(`🔗 Link: ${magicLinkUrl}`);
+      console.log(`🔢 Login code: ${loginCode}`);
       console.log('=================================================');
     }
 
@@ -143,6 +161,75 @@ export async function authRoutes(fastify: FastifyInstance) {
     return reply.send({
       sessionId,
       user: user[0]
+    });
+  });
+
+  // Verify login using short code (OTP-style) instead of clicking the magic link
+  fastify.post<{
+    Body: {
+      email: string;
+      code: string;
+    };
+  }>('/api/auth/verify-code', async (request, reply) => {
+    const { email, code } = request.body;
+
+    if (!email || !code) {
+      return reply.code(400).send({ error: 'Email and code are required' });
+    }
+
+    // Normalize code format (e.g. "ABC123", "ABC-123", "abc-123")
+    const normalizedCode = code.trim().toUpperCase().replace(/\s+/g, '');
+
+    // 1. Fetch non-expired, unused links for this email
+    const now = new Date();
+    const links = await db
+      .select()
+      .from(magicLinks)
+      .where(
+        and(
+          eq(magicLinks.email, email),
+          eq(magicLinks.used, false)
+        )
+      );
+
+    if (links.length === 0) {
+      return reply.code(401).send({ error: 'Invalid or expired code' });
+    }
+
+    // 2. Find a matching code derived from token
+    const matching = links.find((link) => {
+      if (new Date(link.expiresAt) <= now) return false;
+      const derived = deriveLoginCode(link.token).replace(/-/g, '');
+      return derived === normalizedCode.replace(/-/g, '');
+    });
+
+    if (!matching) {
+      return reply.code(401).send({ error: 'Invalid or expired code' });
+    }
+
+    // 3. Mark token as used
+    await db
+      .update(magicLinks)
+      .set({ used: true } as any)
+      .where(eq(magicLinks.id, matching.id));
+
+    // 4. Get User
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, matching.email))
+      .limit(1);
+
+    if (user.length === 0) {
+      return reply.code(400).send({ error: 'User not found' });
+    }
+
+    // 5. Create Session
+    const sessionId = createSession(user[0].id);
+
+    return reply.send({
+      sessionId,
+      user: user[0],
     });
   });
 

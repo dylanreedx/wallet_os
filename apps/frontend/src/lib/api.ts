@@ -47,6 +47,16 @@ export const auth = {
     // Session is NOT set here for magic links
     return data;
   },
+  verifyCode: async (email: string, code: string) => {
+    const data = await fetchWithAuth('/api/auth/verify-code', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    });
+    if (data.sessionId) {
+      localStorage.setItem('sessionId', data.sessionId);
+    }
+    return data;
+  },
   verify: async (token: string) => {
     const data = await fetchWithAuth(`/api/auth/verify?token=${token}`);
     if (data.sessionId) {
