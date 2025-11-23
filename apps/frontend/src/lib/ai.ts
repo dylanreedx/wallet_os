@@ -1,7 +1,7 @@
 import { api } from './api';
 
 export const brain = {
-  categorize: async (data: { description: string; amount: number; date: string }) => {
+  categorize: async (data: { description: string; amount: number; date: string; userId: number }) => {
     const response = await api.post('/api/brain/categorize', data);
     return response;
   },

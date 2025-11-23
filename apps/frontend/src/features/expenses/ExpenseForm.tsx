@@ -30,6 +30,7 @@ import { PriceInput } from './PriceInput';
 import { DescriptionInput } from './DescriptionInput';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const expenseFormSchema = z.object({
   amount: z
@@ -102,12 +103,37 @@ export function ExpenseForm({
   const date = form.watch('date');
 
   // AI Categorization Logic
+  // AI Categorization Logic
+  const [thinkingMessage, setThinkingMessage] = useState('Thinking...');
+  
+  useEffect(() => {
+    if (isBrainThinking) {
+      const messages = [
+        'Categorizing...',
+        'Finding match...',
+        'Sorting...',
+        'Organizing...',
+        'Brainstorming...'
+      ];
+      let i = 0;
+      const interval = setInterval(() => {
+        setThinkingMessage(messages[i % messages.length]);
+        i++;
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [isBrainThinking]);
+
   useEffect(() => {
     if (!description || description.length < 3) return;
     
-    // Don't categorize if category is already set (unless it's "Uncategorized")
-    const currentCategory = form.getValues('category');
-    if (currentCategory && currentCategory !== 'Uncategorized' && expenseId) return;
+    // If editing (expenseId exists), only categorize if description is dirty
+    if (expenseId) {
+      const isDescriptionDirty = form.formState.dirtyFields.description;
+      if (!isDescriptionDirty) return;
+    } 
+    // If creating (no expenseId), we ALWAYS want to re-categorize when description changes
+    // even if we already found a category. The user might be refining the description.
 
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -116,10 +142,13 @@ export function ExpenseForm({
     debounceTimerRef.current = setTimeout(async () => {
       setIsBrainThinking(true);
       try {
+        if (!user?.id) return;
+        
         const result = await brain.categorize({
           description,
           amount: amount || 0,
           date: date || new Date().toISOString(),
+          userId: user.id,
         });
         
         if (result && result.category) {
@@ -137,7 +166,7 @@ export function ExpenseForm({
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [description, amount, date, form, expenseId]);
+  }, [description, amount, date, form, expenseId, user?.id]);
 
   // Load goals
   useEffect(() => {
@@ -370,7 +399,48 @@ export function ExpenseForm({
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base font-semibold">Description</FormLabel>
+              <div className="flex items-center justify-between">
+                <FormLabel className="text-sm sm:text-base font-semibold">Description</FormLabel>
+                
+                {/* AI Category Badge - Top Right */}
+                <div className="flex items-center h-5">
+                  <AnimatePresence mode="wait">
+                    {isBrainThinking && (
+                      <motion.div
+                        key="thinking"
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/50 text-[10px] font-medium text-muted-foreground border border-border/50"
+                      >
+                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                        <motion.span
+                          key={thinkingMessage}
+                          initial={{ opacity: 0, y: 2 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -2 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {thinkingMessage}
+                        </motion.span>
+                      </motion.div>
+                    )}
+                    
+                    {!isBrainThinking && form.watch('category') && (
+                      <motion.div
+                        key="category"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-background text-[10px] font-medium text-primary border border-primary/30 shadow-sm"
+                      >
+                        <Sparkles className="h-2.5 w-2.5" />
+                        {form.watch('category')}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
               <FormControl>
                 <DescriptionInput
                   value={field.value}
@@ -383,43 +453,13 @@ export function ExpenseForm({
             </FormItem>
           )}
         />
-
+        
+        {/* Hidden field to register category with react-hook-form */}
         <FormField
           control={form.control}
           name="category"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm sm:text-base font-semibold flex items-center gap-2">
-                Category
-                {isBrainThinking && (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground animate-pulse">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    The Brain is thinking...
-                  </span>
-                )}
-                {!isBrainThinking && field.value && (
-                  <span className="flex items-center gap-1 text-xs text-primary">
-                    <Sparkles className="h-3 w-3" />
-                    Auto-detected
-                  </span>
-                )}
-              </FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    {...field}
-                    placeholder="Auto-categorized by The Brain"
-                    readOnly
-                    className="bg-muted/50"
-                  />
-                  {/* Fallback manual override could go here later */}
-                </div>
-              </FormControl>
-              <FormDescription>
-                Automatically determined based on your description
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
+            <input type="hidden" {...field} value={field.value || ''} />
           )}
         />
 

@@ -7,12 +7,10 @@ export async function aiRoutes(fastify: FastifyInstance) {
   aiService.registerSkill(categorizationSkill);
 
   fastify.post('/api/brain/categorize', async (request, reply) => {
-    const { description, amount, date } = request.body as any;
-    // @ts-ignore
-    const userId = request.user?.id; // Assumes auth middleware populates this
+    const { description, amount, date, userId } = request.body as any;
 
     if (!userId) {
-      return reply.status(401).send({ error: 'Unauthorized' });
+      return reply.status(400).send({ error: 'userId is required' });
     }
 
     if (!description) {
