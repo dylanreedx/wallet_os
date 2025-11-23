@@ -73,7 +73,7 @@ export function ExpenseForm({
   const [goalsList, setGoalsList] = useState<any[]>([]);
   const [goalItemsList, setGoalItemsList] = useState<any[]>([]);
   const [isBrainThinking, setIsBrainThinking] = useState(false);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
@@ -105,7 +105,7 @@ export function ExpenseForm({
   // AI Categorization Logic
   // AI Categorization Logic
   const [thinkingMessage, setThinkingMessage] = useState('Thinking...');
-  
+
   useEffect(() => {
     if (isBrainThinking) {
       const messages = [
@@ -113,7 +113,7 @@ export function ExpenseForm({
         'Finding match...',
         'Sorting...',
         'Organizing...',
-        'Brainstorming...'
+        'Brainstorming...',
       ];
       let i = 0;
       const interval = setInterval(() => {
@@ -126,12 +126,12 @@ export function ExpenseForm({
 
   useEffect(() => {
     if (!description || description.length < 3) return;
-    
+
     // If editing (expenseId exists), only categorize if description is dirty
     if (expenseId) {
       const isDescriptionDirty = form.formState.dirtyFields.description;
       if (!isDescriptionDirty) return;
-    } 
+    }
     // If creating (no expenseId), we ALWAYS want to re-categorize when description changes
     // even if we already found a category. The user might be refining the description.
 
@@ -143,14 +143,14 @@ export function ExpenseForm({
       setIsBrainThinking(true);
       try {
         if (!user?.id) return;
-        
+
         const result = await brain.categorize({
           description,
           amount: amount || 0,
           date: date || new Date().toISOString(),
           userId: user.id,
         });
-        
+
         if (result && result.category) {
           form.setValue('category', result.category);
         }
@@ -265,7 +265,7 @@ export function ExpenseForm({
       if (expenseId) {
         // Get the original expense before updating to check if it was recurring
         const originalExpense = await expenses.get(expenseId);
-        
+
         // Update existing expense
         expense = await expenses.update(expenseId, expenseData);
         // Fetch the updated expense to get full data
@@ -274,8 +274,11 @@ export function ExpenseForm({
         // Handle recurring expense updates
         if (user?.id) {
           try {
-            const existingRecurring = await monthlyExpenses.getAll(user.id, false);
-            
+            const existingRecurring = await monthlyExpenses.getAll(
+              user.id,
+              false
+            );
+
             // Find monthly expense that matched the OLD expense data
             const oldMatchingRecurring = existingRecurring.find(
               (recurring: any) =>
@@ -374,13 +377,18 @@ export function ExpenseForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 sm:space-y-4">
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-3 sm:space-y-4"
+      >
         <FormField
           control={form.control}
           name="amount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base font-semibold">Amount</FormLabel>
+              <FormLabel className="text-sm sm:text-base font-semibold">
+                Amount
+              </FormLabel>
               <FormControl>
                 <PriceInput
                   value={field.value}
@@ -400,8 +408,10 @@ export function ExpenseForm({
           render={({ field }) => (
             <FormItem>
               <div className="flex items-center justify-between">
-                <FormLabel className="text-sm sm:text-base font-semibold">Description</FormLabel>
-                
+                <FormLabel className="text-sm sm:text-base font-semibold">
+                  Description
+                </FormLabel>
+
                 {/* AI Category Badge - Top Right */}
                 <div className="flex items-center h-5">
                   <AnimatePresence mode="wait">
@@ -425,13 +435,17 @@ export function ExpenseForm({
                         </motion.span>
                       </motion.div>
                     )}
-                    
+
                     {!isBrainThinking && form.watch('category') && (
                       <motion.div
                         key="category"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        transition={{
+                          type: 'spring',
+                          stiffness: 500,
+                          damping: 30,
+                        }}
                         className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-background text-[10px] font-medium text-primary border border-primary/30 shadow-sm"
                       >
                         <Sparkles className="h-2.5 w-2.5" />
@@ -453,7 +467,7 @@ export function ExpenseForm({
             </FormItem>
           )}
         />
-        
+
         {/* Hidden field to register category with react-hook-form */}
         <FormField
           control={form.control}
@@ -468,7 +482,9 @@ export function ExpenseForm({
           name="date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base font-semibold">Date</FormLabel>
+              <FormLabel className="text-sm sm:text-base font-semibold">
+                Date
+              </FormLabel>
               <FormControl>
                 <DatePicker
                   value={field.value}
@@ -487,7 +503,9 @@ export function ExpenseForm({
           name="goalId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base font-semibold">Link to Goal (Optional)</FormLabel>
+              <FormLabel className="text-sm sm:text-base font-semibold">
+                Link to Goal (Optional)
+              </FormLabel>
               <Select
                 onValueChange={(value) => {
                   // "none" is our sentinel value, convert to undefined
@@ -497,7 +515,7 @@ export function ExpenseForm({
               >
                 <FormControl>
                   <SelectTrigger>
-                  <SelectValue placeholder="None - just tracking expenses" />
+                    <SelectValue placeholder="None - just tracking expenses" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -525,7 +543,9 @@ export function ExpenseForm({
               name="goalItemId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm sm:text-base font-semibold">Link to Specific Item (Optional)</FormLabel>
+                  <FormLabel className="text-sm sm:text-base font-semibold">
+                    Link to Specific Item (Optional)
+                  </FormLabel>
                   <Select
                     onValueChange={(value) => {
                       // "none" is our sentinel value, convert to undefined
@@ -587,7 +607,9 @@ export function ExpenseForm({
           name="visibility"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base font-semibold">Visibility</FormLabel>
+              <FormLabel className="text-sm sm:text-base font-semibold">
+                Visibility
+              </FormLabel>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value || 'private'}
@@ -599,8 +621,12 @@ export function ExpenseForm({
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="private">Private (Only me)</SelectItem>
-                  <SelectItem value="friends">Friends (Visible to friends)</SelectItem>
-                  <SelectItem value="public">Public (Visible to everyone)</SelectItem>
+                  <SelectItem value="friends">
+                    Friends (Visible to friends)
+                  </SelectItem>
+                  <SelectItem value="public">
+                    Public (Visible to everyone)
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <FormDescription>
