@@ -13,9 +13,16 @@ interface GoalCardProps {
     targetMonth?: string | null;
   };
   onClick?: () => void;
+  contextLabel?: string;
+  contextSubtext?: string;
 }
 
-export function GoalCard({ goal, onClick }: GoalCardProps) {
+export function GoalCard({
+  goal,
+  onClick,
+  contextLabel,
+  contextSubtext,
+}: GoalCardProps) {
   const progress =
     goal.targetAmount > 0
       ? Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
@@ -38,7 +45,7 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
       onClick={onClick}
     >
       <div className="p-4 space-y-3">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <h3 className="font-semibold text-lg">{goal.name}</h3>
             {goal.description && (
@@ -47,7 +54,16 @@ export function GoalCard({ goal, onClick }: GoalCardProps) {
               </p>
             )}
           </div>
+          {contextLabel && (
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary whitespace-nowrap">
+              {contextLabel}
+            </span>
+          )}
         </div>
+
+        {contextSubtext && (
+          <p className="text-xs text-muted-foreground">{contextSubtext}</p>
+        )}
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">

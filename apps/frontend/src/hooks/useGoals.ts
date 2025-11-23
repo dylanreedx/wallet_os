@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { goals as goalsApi } from '@/lib/api';
+import { goals as goalsApi, social } from '@/lib/api';
 
 export interface Goal {
   id: number;
@@ -22,6 +22,15 @@ export function useGoals({ userId, enabled = true }: UseGoalsOptions) {
   return useQuery({
     queryKey: ['goals', userId],
     queryFn: () => goalsApi.getAll(userId!),
+    enabled: !!userId && enabled,
+    placeholderData: (previousData) => previousData,
+  });
+}
+
+export function useSharedGoals({ userId, enabled = true }: UseGoalsOptions) {
+  return useQuery({
+    queryKey: ['sharedGoals', userId],
+    queryFn: () => social.getSharedGoals(userId!),
     enabled: !!userId && enabled,
     placeholderData: (previousData) => previousData,
   });
@@ -50,8 +59,13 @@ export function useUpdateGoal() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof goalsApi.update>[1] }) =>
-      goalsApi.update(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: Parameters<typeof goalsApi.update>[1];
+    }) => goalsApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals'] });
     },

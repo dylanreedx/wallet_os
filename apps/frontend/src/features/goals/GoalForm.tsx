@@ -157,6 +157,7 @@ export function GoalForm({
         (sum, item) => sum + item.price * item.quantity,
         0
       );
+      const selectedFriendIds = Array.from(new Set(values.sharedWith || []));
 
       if (goalId) {
         // Update existing goal
@@ -206,31 +207,48 @@ export function GoalForm({
         goal = await goals.get(goal.id);
       }
 
+      if (selectedFriendIds.length > 0) {
+        let alreadySharedIds: number[] = [];
+
+        if (goalId) {
+          try {
+            const existingCollaborators = await social.getGoalUsers(goal.id);
+            alreadySharedIds = (existingCollaborators || [])
+              .map((entry: any) => entry?.sharedGoal?.userId ?? entry?.user?.id)
+              .filter(
+                (id: number | undefined): id is number => typeof id === 'number'
+              );
+          } catch (err) {
+            console.error('Failed to load existing goal collaborators:', err);
+          }
+        }
+
+        const friendIdsToShare = selectedFriendIds.filter(
+          (friendId) => !alreadySharedIds.includes(friendId)
+        );
+
+        for (const friendId of friendIdsToShare) {
+          try {
+            await social.shareGoal(goal.id, friendId, 'contributor');
+          } catch (err) {
+            if (
+              err instanceof Error &&
+              err.message.includes('Goal already shared')
+            ) {
+              continue;
+            }
+            console.error(`Failed to share with friend ${friendId}`, err);
+          }
+        }
+      }
+
       if (!goalId) {
         form.reset({
           name: '',
           description: '',
           deadline: format(new Date(), 'yyyy-MM-dd'),
           targetMonth: undefined,
-          items: [{ name: '', price: undefined, quantity: 1 }],
-        });
-        // Share with selected friends
-        if (values.sharedWith && values.sharedWith.length > 0) {
-          for (const friendId of values.sharedWith) {
-            try {
-              await social.shareGoal(goal.id, friendId, 'contributor');
-            } catch (err) {
-              console.error(`Failed to share with friend ${friendId}`, err);
-            }
-          }
-        }
-
-        form.reset({
-          name: '',
-          description: '',
-          deadline: format(new Date(), 'yyyy-MM-dd'),
-          targetMonth: undefined,
-          items: [{ name: '', price: undefined, quantity: 1 }],
+          items: [{ name: '', price: undefined as any, quantity: 1 }],
           sharedWith: [],
         });
       }
@@ -452,7 +470,6 @@ export function GoalForm({
               This will be set as your target amount
             </p>
           </div>
-
         </div>
 
         {friends.length > 0 && (
@@ -462,7 +479,9 @@ export function GoalForm({
             render={() => (
               <FormItem>
                 <div className="mb-4">
-                  <FormLabel className="text-base">Share with Friends</FormLabel>
+                  <FormLabel className="text-base">
+                    Share with Friends
+                  </FormLabel>
                   <FormDescription>
                     Select friends to collaborate on this goal.
                   </FormDescription>
@@ -484,7 +503,10 @@ export function GoalForm({
                                 checked={field.value?.includes(friend.id)}
                                 onCheckedChange={(checked) => {
                                   return checked
-                                    ? field.onChange([...(field.value || []), friend.id])
+                                    ? field.onChange([
+                                        ...(field.value || []),
+                                        friend.id,
+                                      ])
                                     : field.onChange(
                                         field.value?.filter(
                                           (value: number) => value !== friend.id
