@@ -33,20 +33,22 @@ export async function notificationRoutes(fastify: FastifyInstance) {
 
     const result = await db
       .update(notifications)
-      .set({ read: true })
+      .set({ read: true } as any)
       .where(
         and(
           eq(notifications.id, parseInt(id)),
           eq(notifications.userId, userId)
         )
-      )
-      .returning();
+      );
 
-    if (result.length === 0) {
+    if (
+      result === undefined ||
+      (Array.isArray(result) && result.length === 0)
+    ) {
       return reply.status(404).send({ error: 'Notification not found' });
     }
 
-    return result[0];
+    return Array.isArray(result) ? result[0] : result;
   });
 
   // Mark all notifications as read
@@ -58,7 +60,7 @@ export async function notificationRoutes(fastify: FastifyInstance) {
 
     await db
       .update(notifications)
-      .set({ read: true })
+      .set({ read: true } as any)
       .where(eq(notifications.userId, userId));
 
     return { message: 'All notifications marked as read' };
