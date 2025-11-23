@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { aiService } from '../services/ai/AIService';
-import { categorizationSkill } from '../services/ai/skills/CategorizationSkill';
+import { aiService } from '../services/ai/AIService.js';
+import { categorizationSkill } from '../services/ai/skills/CategorizationSkill.js';
 
 export async function aiRoutes(fastify: FastifyInstance) {
   // Register skills

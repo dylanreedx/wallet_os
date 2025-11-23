@@ -1,5 +1,5 @@
-import { db } from '../../db';
-import { expenses, goals } from '../../db/dbSchema';
+import { db } from '../../db/index.js';
+import { expenses, goals } from '../../db/dbSchema.js';
 import { eq, desc } from 'drizzle-orm';
 
 export class ContextEngine {

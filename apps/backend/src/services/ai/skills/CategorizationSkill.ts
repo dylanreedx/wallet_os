@@ -1,5 +1,5 @@
-import { AISkill, aiService } from '../AIService';
-import { contextEngine } from '../ContextEngine';
+import { AISkill, aiService } from '../AIService.js';
+import { contextEngine } from '../ContextEngine.js';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
@@ -16,7 +16,7 @@ export class CategorizationSkill implements AISkill {
 
     // 2. Construct Few-Shot Prompt
     let prompt = `Task: Categorize the following expense.\n\n`;
-    
+
     prompt += `User's recent history (for context):\n`;
     recentExpenses.forEach((exp) => {
       if (exp.category) {
@@ -33,14 +33,21 @@ export class CategorizationSkill implements AISkill {
       const { object } = await generateObject({
         model: aiService.getModel(),
         schema: z.object({
-          category: z.string().describe('The category of the expense (e.g., Food, Transport, Utilities)'),
+          category: z
+            .string()
+            .describe(
+              'The category of the expense (e.g., Food, Transport, Utilities)'
+            ),
           confidence: z.number().describe('Confidence score between 0 and 1'),
         }),
-        system: 'You are a financial assistant. Your job is to categorize expenses accurately based on the user\'s history and the description.',
+        system:
+          "You are a financial assistant. Your job is to categorize expenses accurately based on the user's history and the description.",
         prompt: prompt,
       });
 
-      console.log(`[Brain] Categorized "${description}" as "${object.category}" (confidence: ${object.confidence})`);
+      console.log(
+        `[Brain] Categorized "${description}" as "${object.category}" (confidence: ${object.confidence})`
+      );
       return object.category;
     } catch (error) {
       console.error('[Brain] Error generating categorization:', error);
