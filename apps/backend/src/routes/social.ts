@@ -148,10 +148,9 @@ export async function socialRoutes(fastify: FastifyInstance) {
     await db.insert(friends).values(autoAcceptedFriendship);
 
     // Mark invite as used
-    const inviteUsageUpdate: Pick<NewInvite, 'used'> = { used: true };
     await db
       .update(invites)
-      .set(inviteUsageUpdate)
+      .set({ used: true })
       .where(eq(invites.id, invite.id));
 
     // Notify the creator
