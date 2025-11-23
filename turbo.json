@@ -1,7 +1,13 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
-  "globalEnv": ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN", "OPENAI_API_KEY", "RESEND_API_KEY"],
+  "globalEnv": [
+    "TURSO_DATABASE_URL",
+    "TURSO_AUTH_TOKEN",
+    "OPENAI_API_KEY",
+    "RESEND_API_KEY",
+    "FRONTEND_URL"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
