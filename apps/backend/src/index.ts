@@ -12,6 +12,7 @@ import { monthlyExpensesRoutes } from './routes/monthlyExpenses.js';
 import { aiRoutes } from './routes/ai.js';
 import { notificationRoutes } from './routes/notifications.js';
 import { goalChatRoutes } from './routes/goalChats.js';
+import { authMiddleware } from './middleware/auth.js';
 
 dotenv.config();
 
@@ -34,17 +35,23 @@ const start = async () => {
     });
 
     // Register routes
+    // Auth routes are public (they handle their own auth logic)
     await fastify.register(authRoutes);
-    await fastify.register(expensesRoutes);
-    await fastify.register(goalsRoutes);
-    await fastify.register(goalItemsRoutes);
-    await fastify.register(budgetRoutes);
-    await fastify.register(socialRoutes);
-    await fastify.register(monthlyExpensesRoutes);
+    
+    // All other routes require authentication; wrap them in a scope with the auth hook
+    await fastify.register(async (protectedScope) => {
+      protectedScope.addHook('onRequest', authMiddleware);
 
-    await fastify.register(aiRoutes);
-    await fastify.register(notificationRoutes);
-    await fastify.register(goalChatRoutes);
+      await protectedScope.register(expensesRoutes);
+      await protectedScope.register(goalsRoutes);
+      await protectedScope.register(goalItemsRoutes);
+      await protectedScope.register(budgetRoutes);
+      await protectedScope.register(socialRoutes);
+      await protectedScope.register(monthlyExpensesRoutes);
+      await protectedScope.register(aiRoutes);
+      await protectedScope.register(notificationRoutes);
+      await protectedScope.register(goalChatRoutes);
+    });
 
     const port = Number(process.env.PORT) || 3001;
     const host = process.env.HOST || '0.0.0.0';

@@ -4,7 +4,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 const sessions = new Map<string, { userId: number; expiresAt: number }>();
 
 export interface AuthenticatedRequest extends FastifyRequest {
-  userId?: number;
+  user?: { id: number; name?: string };
 }
 
 export async function authMiddleware(
@@ -13,22 +13,29 @@ export async function authMiddleware(
 ): Promise<void> {
   const sessionId = request.headers['x-session-id'] as string;
 
+  console.log('[AUTH] Checking session:', sessionId ? `${sessionId.substring(0, 20)}...` : 'MISSING');
+
   if (!sessionId) {
+    console.log('[AUTH] ❌ No session ID provided');
     return reply.code(401).send({ error: 'No session ID provided' });
   }
 
   const session = sessions.get(sessionId);
 
   if (!session) {
+    console.log('[AUTH] ❌ Invalid session - not found in store');
     return reply.code(401).send({ error: 'Invalid session' });
   }
 
   if (session.expiresAt < Date.now()) {
+    console.log('[AUTH] ❌ Session expired');
     sessions.delete(sessionId);
     return reply.code(401).send({ error: 'Session expired' });
   }
 
-  request.userId = session.userId;
+  console.log('[AUTH] ✅ Valid session for userId:', session.userId);
+  // Set request.user to match what routes are checking for
+  request.user = { id: session.userId };
 }
 
 export function createSession(userId: number): string {
