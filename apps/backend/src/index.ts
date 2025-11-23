@@ -12,12 +12,12 @@ import { monthlyExpensesRoutes } from './routes/monthlyExpenses.js';
 import { aiRoutes } from './routes/ai.js';
 import { notificationRoutes } from './routes/notifications.js';
 import { goalChatRoutes } from './routes/goalChats.js';
-import { authMiddleware } from './middleware/auth.js';
+import { authMiddleware, cleanupExpiredSessions } from './middleware/auth.js';
 
 dotenv.config();
 
 const fastify = Fastify({
-  logger: true
+  logger: true,
 });
 
 // Start server
@@ -26,7 +26,7 @@ const start = async () => {
     // Register plugins
     await fastify.register(cors, {
       origin: true,
-      credentials: true
+      credentials: true,
     });
 
     // Health check
@@ -34,10 +34,13 @@ const start = async () => {
       return { status: 'ok', timestamp: new Date().toISOString() };
     });
 
+    // Clean up expired sessions on startup
+    await cleanupExpiredSessions();
+
     // Register routes
     // Auth routes are public (they handle their own auth logic)
     await fastify.register(authRoutes);
-    
+
     // All other routes require authentication; wrap them in a scope with the auth hook
     await fastify.register(async (protectedScope) => {
       protectedScope.addHook('onRequest', authMiddleware);
@@ -55,7 +58,7 @@ const start = async () => {
 
     const port = Number(process.env.PORT) || 3001;
     const host = process.env.HOST || '0.0.0.0';
-    
+
     await fastify.listen({ port, host });
     console.log(`🚀 Server running on http://${host}:${port}`);
   } catch (err) {

@@ -51,7 +51,10 @@ export async function authRoutes(fastify: FastifyInstance) {
       user = newUser;
     } else if (name && user[0].name !== name) {
       // Update name if provided and different
-      await db.update(users).set({ name } as any).where(eq(users.id, user[0].id));
+      await db
+        .update(users)
+        .set({ name } as any)
+        .where(eq(users.id, user[0].id));
     }
 
     // 2. Generate Magic Link Token
@@ -69,7 +72,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     // 3. Send Email
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const magicLinkUrl = `${frontendUrl}/auth/verify?token=${token}`;
-    
+
     if (process.env.RESEND_API_KEY) {
       try {
         const { data, error } = await resend.emails.send({
@@ -87,7 +90,7 @@ export async function authRoutes(fastify: FastifyInstance) {
               </p>
               <p style="color: #666; font-size: 14px;">If you didn't request this, you can safely ignore this email.</p>
             </div>
-          `
+          `,
         });
 
         if (error) {
@@ -108,10 +111,13 @@ export async function authRoutes(fastify: FastifyInstance) {
       console.log('=================================================');
     }
 
-    return reply.send({ 
+    return reply.send({
       message: 'Magic link sent',
       // Only return link in dev mode if NO api key is present
-      mockLink: (!process.env.RESEND_API_KEY && process.env.NODE_ENV === 'development') ? magicLinkUrl : undefined 
+      mockLink:
+        !process.env.RESEND_API_KEY && process.env.NODE_ENV === 'development'
+          ? magicLinkUrl
+          : undefined,
     });
   });
 
@@ -156,11 +162,11 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
 
     // 4. Create Session
-    const sessionId = createSession(user[0].id);
+    const sessionId = await createSession(user[0].id);
 
     return reply.send({
       sessionId,
-      user: user[0]
+      user: user[0],
     });
   });
 
@@ -185,12 +191,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     const links = await db
       .select()
       .from(magicLinks)
-      .where(
-        and(
-          eq(magicLinks.email, email),
-          eq(magicLinks.used, false)
-        )
-      );
+      .where(and(eq(magicLinks.email, email), eq(magicLinks.used, false)));
 
     if (links.length === 0) {
       return reply.code(401).send({ error: 'Invalid or expired code' });
@@ -225,7 +226,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
 
     // 5. Create Session
-    const sessionId = createSession(user[0].id);
+    const sessionId = await createSession(user[0].id);
 
     return reply.send({
       sessionId,
@@ -242,7 +243,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     const sessionId = request.headers['x-session-id'];
 
     if (sessionId) {
-      deleteSession(sessionId);
+      await deleteSession(sessionId);
     }
 
     return reply.code(204).send();
@@ -294,7 +295,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       .update(users)
       .set({
         monthlyIncome,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       } as any)
       .where(eq(users.id, userId))
       .returning();

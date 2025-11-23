@@ -204,6 +204,17 @@ export const goalChats = sqliteTable('goal_chats', {
     .$defaultFn(() => new Date()),
 });
 
+export const sessions = sqliteTable('sessions', {
+  id: text('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Expense = typeof expenses.$inferSelect;
@@ -234,3 +245,5 @@ export type NewNotification = typeof notifications.$inferInsert & {
 };
 export type GoalChat = typeof goalChats.$inferSelect;
 export type NewGoalChat = typeof goalChats.$inferInsert;
+export type Session = typeof sessions.$inferSelect;
+export type NewSession = typeof sessions.$inferInsert;
