@@ -149,14 +149,13 @@ export function EditExpenseDialog({
           // Mobile slide animations
           'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
           'sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95',
-          'p-3 sm:p-6 pb-6 sm:pb-6' // Tighter padding on mobile
+          'p-3 sm:p-6 pb-6 sm:pb-6', // Tighter padding on mobile
+          'max-h-[90vh] sm:max-h-[85vh]' // Ensure max height for scrolling
         )}
         style={{
           maxHeight: isMobile && viewportHeight
             ? `${viewportHeight - 20}px`
-            : isMobile
-            ? '90vh'
-            : undefined,
+            : undefined, // Let CSS handle desktop/default mobile
           width: isMobile ? '100%' : undefined,
           maxWidth: isMobile ? '100%' : undefined,
         }}

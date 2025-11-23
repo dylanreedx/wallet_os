@@ -96,6 +96,7 @@ export const expenses = {
     date: string;
     goalId?: number;
     goalItemId?: number;
+    visibility?: 'private' | 'friends' | 'public';
   }) =>
     fetchWithAuth('/api/expenses', {
       method: 'POST',
@@ -110,6 +111,7 @@ export const expenses = {
       date?: string;
       goalId?: number | null;
       goalItemId?: number | null;
+      visibility?: 'private' | 'friends' | 'public';
     }
   ) =>
     fetchWithAuth(`/api/expenses/${id}`, {
@@ -274,6 +276,24 @@ export const social = {
     }),
   unshareGoal: (goalId: number, userId: number) =>
     fetchWithAuth(`/api/social/goals/${goalId}/users/${userId}`, {
+      method: 'DELETE',
+    }),
+};
+
+export const api = {
+  get: (endpoint: string) => fetchWithAuth(endpoint),
+  post: (endpoint: string, data: any) =>
+    fetchWithAuth(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  put: (endpoint: string, data: any) =>
+    fetchWithAuth(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  delete: (endpoint: string) =>
+    fetchWithAuth(endpoint, {
       method: 'DELETE',
     }),
 };

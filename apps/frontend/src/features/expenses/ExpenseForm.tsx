@@ -4,6 +4,7 @@ import * as z from 'zod';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { expenses } from '@/lib/api';
+import { brain } from '@/lib/ai';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,11 +24,12 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { goals, goalItems, monthlyExpenses } from '@/lib/api';
 import { PriceInput } from './PriceInput';
 import { DescriptionInput } from './DescriptionInput';
-import { CategoryTags } from './CategoryTags';
+import { Sparkles, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 const expenseFormSchema = z.object({
   amount: z
@@ -46,6 +48,7 @@ const expenseFormSchema = z.object({
   goalId: z.string().optional(),
   goalItemId: z.string().optional(),
   isRecurring: z.boolean().optional(),
+  visibility: z.enum(['private', 'friends', 'public']).optional(),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
@@ -68,7 +71,8 @@ export function ExpenseForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [goalsList, setGoalsList] = useState<any[]>([]);
   const [goalItemsList, setGoalItemsList] = useState<any[]>([]);
-  const [mostUsedCategories, setMostUsedCategories] = useState<string[]>([]);
+  const [isBrainThinking, setIsBrainThinking] = useState(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
@@ -80,6 +84,7 @@ export function ExpenseForm({
       goalId: defaultValues?.goalId?.toString() || undefined,
       goalItemId: defaultValues?.goalItemId?.toString() || undefined,
       isRecurring: defaultValues?.isRecurring || false,
+      visibility: defaultValues?.visibility || 'private',
     },
   });
 
@@ -92,6 +97,47 @@ export function ExpenseForm({
   }, [defaultValues?.isRecurring, expenseId, form]);
 
   const selectedGoalId = form.watch('goalId');
+  const description = form.watch('description');
+  const amount = form.watch('amount');
+  const date = form.watch('date');
+
+  // AI Categorization Logic
+  useEffect(() => {
+    if (!description || description.length < 3) return;
+    
+    // Don't categorize if category is already set (unless it's "Uncategorized")
+    const currentCategory = form.getValues('category');
+    if (currentCategory && currentCategory !== 'Uncategorized' && expenseId) return;
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(async () => {
+      setIsBrainThinking(true);
+      try {
+        const result = await brain.categorize({
+          description,
+          amount: amount || 0,
+          date: date || new Date().toISOString(),
+        });
+        
+        if (result && result.category) {
+          form.setValue('category', result.category);
+        }
+      } catch (error) {
+        console.error('Brain failed to categorize:', error);
+      } finally {
+        setIsBrainThinking(false);
+      }
+    }, 1000); // 1 second debounce
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [description, amount, date, form, expenseId]);
 
   // Load goals
   useEffect(() => {
@@ -100,33 +146,6 @@ export function ExpenseForm({
         setGoalsList(Array.isArray(data) ? data : []);
       });
     }
-  }, [user?.id]);
-
-  // Load most used categories for tag ordering
-  useEffect(() => {
-    const loadMostUsedCategories = async () => {
-      if (!user?.id) return;
-      try {
-        const allExpenses = await expenses.getAll(user.id);
-        if (Array.isArray(allExpenses)) {
-          const categoryCounts = allExpenses.reduce((acc, exp: any) => {
-            if (exp.category) {
-              acc[exp.category] = (acc[exp.category] || 0) + 1;
-            }
-            return acc;
-          }, {} as Record<string, number>);
-          
-          const sorted = Object.entries(categoryCounts)
-            .sort(([, a]: any, [, b]: any) => b - a)
-            .map(([category]) => category);
-          
-          setMostUsedCategories(sorted);
-        }
-      } catch (err) {
-        console.error('Failed to load category usage:', err);
-      }
-    };
-    loadMostUsedCategories();
   }, [user?.id]);
 
   // Load goal items when goal is selected OR when editing with existing goalId
@@ -211,6 +230,7 @@ export function ExpenseForm({
           values.goalItemId && values.goalItemId !== 'none'
             ? parseInt(values.goalItemId)
             : undefined,
+        visibility: values.visibility,
       };
 
       if (expenseId) {
@@ -369,16 +389,34 @@ export function ExpenseForm({
           name="category"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base font-semibold">Category</FormLabel>
+              <FormLabel className="text-sm sm:text-base font-semibold flex items-center gap-2">
+                Category
+                {isBrainThinking && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground animate-pulse">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    The Brain is thinking...
+                  </span>
+                )}
+                {!isBrainThinking && field.value && (
+                  <span className="flex items-center gap-1 text-xs text-primary">
+                    <Sparkles className="h-3 w-3" />
+                    Auto-detected
+                  </span>
+                )}
+              </FormLabel>
               <FormControl>
-                <CategoryTags
-                  selectedCategory={field.value}
-                  onCategoryChange={field.onChange}
-                  mostUsedCategories={mostUsedCategories}
-                />
+                <div className="relative">
+                  <Input
+                    {...field}
+                    placeholder="Auto-categorized by The Brain"
+                    readOnly
+                    className="bg-muted/50"
+                  />
+                  {/* Fallback manual override could go here later */}
+                </div>
               </FormControl>
               <FormDescription>
-                Select a category tag or create a new one
+                Automatically determined based on your description
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -419,7 +457,7 @@ export function ExpenseForm({
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="None - just tracking expenses" />
+                  <SelectValue placeholder="None - just tracking expenses" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -499,6 +537,36 @@ export function ExpenseForm({
                   and can appear automatically in future months
                 </FormDescription>
               </div>
+            </FormItem>
+          )}
+        />
+
+        {/* Visibility Toggle - New Social Feature */}
+        <FormField
+          control={form.control}
+          name="visibility"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm sm:text-base font-semibold">Visibility</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value || 'private'}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select visibility" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="private">Private (Only me)</SelectItem>
+                  <SelectItem value="friends">Friends (Visible to friends)</SelectItem>
+                  <SelectItem value="public">Public (Visible to everyone)</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Control who can see this expense
+              </FormDescription>
+              <FormMessage />
             </FormItem>
           )}
         />

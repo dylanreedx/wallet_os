@@ -88,51 +88,33 @@
 - [P7-009: Budget Analysis Bug Fixes](./P7-009-budget-analysis-bug-fixes.md) ✅
 - [P7-010: AI SDK Migration & Performance](./P7-010-ai-sdk-migration-performance.md) ✅
 
+### Phase 12: AI Integration (The Brain) 🧠
+
+- [x] P12-001: Design Agentic Architecture (AIService, ContextEngine)
+- [x] P12-002: Implement Categorization Skill
+- [x] P12-003: Integrate AI into Expense Form
+
+### Phase 8: Social Features 👥
+
+- [x] P8-001: Database Schema for Friends & Visibility
+- [x] P8-002: Backend Routes for Friends
+- [x] P8-003: Expense Visibility Toggle
+- [x] P8-004: Frontend UI for Friends List
+- [x] P8-005: Frontend UI for Expense Sharing
+- [x] P8-006: Real-time Updates for Shared Expenses
+- [x] P8-007: Notification System for Social Interactions
+- [x] P8-008: Social Profile Tab
+- [x] P8-009: Friends List & Management UI
+- [x] P8-010: Invite Friends UI
+
 ---
 
 ## TODO 📋
 
-### Phase 4: Core UI Components & Layout (4 tickets remaining)
+### Phase 4: Core UI Components & Layout (Completed)
+_All critical Phase 4 tickets are complete._
 
-- [P4-005: Monthly Summary](./P4-005-monthly-summary.md)
-- [P4-009: Mobile Gestures & Animations](./P4-009-mobile-gestures-animations.md) (Partial - drag-and-drop, swipe, pull-to-refresh done; page transitions, loading skeletons remaining)
-- [P4-011: Calendar View Switcher](./P4-011-calendar-view-switcher.md) (Future enhancement)
-- [P4-012: Cross-Date Drag Drop Placeholder](./P4-012-cross-date-drag-placeholder.md) (UX improvement for drag and drop)
-
-### Phase 5: Expense Tracking Features (4 tickets remaining)
-
-- [P5-005: Category Management](./P5-005-category-management.md)
-- [P5-006: Monthly Summary](./P5-006-monthly-summary.md)
-- [P5-007: Category Breakdown](./P5-007-category-breakdown.md)
-- [P5-008: Data Persistence](./P5-008-data-persistence.md)
-
-### Phase 6: Goal Management Features (COMPLETE ✅ - 7 tickets)
-
-- [P6-001: Goal Creation](./P6-001-goal-creation.md) ✅
-- [P6-002: Goal Item Management](./P6-002-goal-item-management.md) ✅
-- [P6-003: Progress Tracking](./P6-003-progress-tracking.md) ✅
-- [P6-004: Goal Timeline](./P6-004-goal-timeline.md) ✅
-- [P6-005: Goal Editing](./P6-005-goal-editing.md) ✅
-- [P6-006: Goal Deletion](./P6-006-goal-deletion.md) ✅
-- [P6-007: Goal Statistics](./P6-007-goal-statistics.md) ✅
-
-### Phase 7: Budget Analysis Features (9 tickets)
-
-**DONE:**
-- [P7-001: Budget Analysis UI](./P7-001-budget-analysis-ui.md) ✅
-- [P7-002: Display Budget Suggestions](./P7-002-display-budget-suggestions.md) ✅
-- [P7-007: Income Tracking](./P7-007-income-tracking.md) ✅
-- [P7-008: Recurring Monthly Expenses](./P7-008-recurring-monthly-expenses.md) ✅
-- [P7-009: Budget Analysis Bug Fixes](./P7-009-budget-analysis-bug-fixes.md) ✅
-- [P7-010: AI SDK Migration & Performance](./P7-010-ai-sdk-migration-performance.md) ✅
-
-**TODO:**
-- [P7-003: Goal Recommendations](./P7-003-goal-recommendations.md)
-- [P7-004: Historical Analysis](./P7-004-historical-analysis.md)
-- [P7-005: Budget vs Actual](./P7-005-budget-vs-actual.md)
-- [P7-006: Smart Alerts](./P7-006-smart-alerts.md)
-
-### Phase 8: Social Features (6 tickets)
+### Phase 8: Social Features (Prioritized)
 
 - [P8-001: Share Goal UI](./P8-001-share-goal-ui.md)
 - [P8-002: Shared Goals List](./P8-002-shared-goals-list.md)
@@ -140,8 +122,29 @@
 - [P8-004: User Invitation System](./P8-004-user-invitation-system.md)
 - [P8-005: Role Management](./P8-005-role-management.md)
 - [P8-006: Shared Expense Contributions](./P8-006-shared-expense-contributions.md)
+- [P8-007: Expense Visibility Controls](./P8-007-expense-visibility-controls.md) (New)
 
-### Phase 9: PWA & Mobile Optimization (6 tickets remaining)
+### Phase 12: AI Integration ("The Brain") (Prioritized)
+
+- [P12-001: AI Service Foundation](./P12-001-ai-service-foundation.md)
+- [P12-002: Smart Categorization Skill](./P12-002-smart-categorization-skill.md)
+- [P12-003: Frontend Brain Integration](./P12-003-frontend-brain-integration.md)
+
+### Phase 5: Expense Tracking Features (Remaining)
+
+- [P5-005: Category Management](./P5-005-category-management.md)
+- [P5-006: Monthly Summary](./P5-006-monthly-summary.md)
+- [P5-007: Category Breakdown](./P5-007-category-breakdown.md)
+- [P5-008: Data Persistence](./P5-008-data-persistence.md)
+
+### Phase 7: Budget Analysis Features (Remaining)
+
+- [P7-003: Goal Recommendations](./P7-003-goal-recommendations.md)
+- [P7-004: Historical Analysis](./P7-004-historical-analysis.md)
+- [P7-005: Budget vs Actual](./P7-005-budget-vs-actual.md)
+- [P7-006: Smart Alerts](./P7-006-smart-alerts.md)
+
+### Phase 9: PWA & Mobile Optimization (Remaining)
 
 - [P9-001: Service Worker](./P9-001-service-worker.md)
 - [P9-003: iOS Optimizations](./P9-003-ios-optimizations.md)
@@ -150,12 +153,8 @@
 - [P9-006: Performance Optimization](./P9-006-performance-optimization.md)
 - [P9-007: Testing on iPhone](./P9-007-testing-on-iphone.md)
 
-### Phase 10: Polish & Enhancements (9 tickets)
+### Phase 10: Polish & Enhancements (Remaining)
 
-**DONE:**
-- [P10-009: TanStack Query Integration](./P10-009-tanstack-query-integration.md) ✅
-
-**TODO:**
 - [P10-001: Loading States](./P10-001-loading-states.md)
 - [P10-002: Error Handling](./P10-002-error-handling.md)
 - [P10-003: Form Validation](./P10-003-form-validation.md)
@@ -165,7 +164,7 @@
 - [P10-007: Testing](./P10-007-testing.md)
 - [P10-008: Documentation](./P10-008-documentation.md)
 
-### Phase 11: Deployment & Infrastructure (1 ticket)
+### Phase 11: Deployment & Infrastructure (Remaining)
 
 - [P11-001: Deployment Setup](./P11-001-deployment-setup.md)
 
@@ -189,9 +188,10 @@ _No tickets currently in QA_
 - Click on any ticket to view detailed information
 - Move tickets between columns as work progresses
 - Update this board when ticket status changes
-- UI refinement: Category Breakdown reworked to reduce vertical footprint using shadcn components (Button, Dialog, Card)
+- **2025-11-23**: Audited board. Prioritized Phase 8 (Social) and Phase 12 (AI Integration). Archived completed Phase 4 tickets.
 - **2025-11-05**: Completed 6 critical mobile UX improvement tickets (P4-020 through P4-025): Added drag handle to prevent accidental drags, implemented compact/expanded MonthlySummary toggle, added chart animations, fixed expense item full-width layout, and implemented keyboard-aware modals using visualViewport API. All tickets ready for QA testing.
 - **2025-11-06**: Added 6 critical mobile UX improvement tickets (P4-020 through P4-025) addressing drag-drop issues, modal responsiveness, layout truncation, and animation enhancements based on real-world mobile testing feedback.
 - **2025-11-06**: Vertical spacing compacting initiative COMPLETE - 6 tickets implemented (P4-013 through P4-018) transforming ExpensesPage into ultra-compact, information-dense layout inspired by Stripe, Linear, and modern data tables. Result: 45-50% more content visible per screen with professional aesthetic.
 - **2025-11-05**: Expense Color System (P4-019) - Added automatic color assignment for expenses with friendly accessible palette. Colors appear on icons and badges while main borders remain neutral. Changed "AUTO" to "SUBSCRIPTION" label. Created migration and seed script for backfilling existing expenses.
 - **2025-11-19**: Implemented Secure Authentication (Magic Links) with Resend integration (P2-011, P3-007). Generated premium PWA assets (P9-002). Codebase analysis completed.
+

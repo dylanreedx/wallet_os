@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Wallet, Target, TrendingUp } from 'lucide-react';
+import { Home, Wallet, Target, TrendingUp, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -13,6 +13,7 @@ const navItems: NavItem[] = [
   { path: '/expenses', label: 'Expenses', icon: Wallet },
   { path: '/goals', label: 'Goals', icon: Target },
   { path: '/budget', label: 'Budget', icon: TrendingUp },
+  { path: '/profile', label: 'Profile', icon: User },
 ];
 
 export function BottomNav() {

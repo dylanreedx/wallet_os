@@ -8,6 +8,8 @@ import ExpensesPage from '@/features/expenses/ExpensesPage';
 import GoalsPage from '@/features/goals/GoalsPage';
 import GoalDetailPage from '@/features/goals/GoalDetailPage';
 import BudgetPage from '@/features/budget/BudgetPage';
+import ProfilePage from '@/features/social/ProfilePage';
+import InvitePage from '@/features/social/InvitePage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { sessionId, loading } = useAuth();
@@ -38,6 +40,7 @@ function AppRoutes() {
           element={sessionId ? <Navigate to="/" replace /> : <LoginPage />}
         />
         <Route path="/auth/verify" element={<VerifyPage />} />
+        <Route path="/invite" element={<InvitePage />} />
         <Route
           path="/"
           element={
@@ -78,6 +81,15 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
       {sessionId && <BottomNav />}
     </>

@@ -36,10 +36,31 @@ export const expenses = sqliteTable('expenses', {
   goalItemId: integer('goal_item_id').references(() => goalItems.id, {
     onDelete: 'set null',
   }),
+  visibility: text('visibility').notNull().default('private'), // private, friends, public
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .$defaultFn(() => new Date()),
 });
+
+export const friends = sqliteTable(
+  'friends',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id),
+    friendId: integer('friend_id')
+      .notNull()
+      .references(() => users.id),
+    status: text('status').notNull().default('pending'), // pending, accepted
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => ({
+    uniqueFriendship: unique().on(table.userId, table.friendId),
+  })
+);
 
 export const goals = sqliteTable('goals', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -141,6 +162,19 @@ export const magicLinks = sqliteTable('magic_links', {
     .$defaultFn(() => new Date()),
 });
 
+export const invites = sqliteTable('invites', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  creatorId: integer('creator_id')
+    .notNull()
+    .references(() => users.id),
+  token: text('token').notNull().unique(),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  used: integer('used', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Expense = typeof expenses.$inferSelect;
@@ -157,3 +191,7 @@ export type MonthlyExpense = typeof monthlyExpenses.$inferSelect;
 export type NewMonthlyExpense = typeof monthlyExpenses.$inferInsert;
 export type MagicLink = typeof magicLinks.$inferSelect;
 export type NewMagicLink = typeof magicLinks.$inferInsert;
+export type Friend = typeof friends.$inferSelect;
+export type NewFriend = typeof friends.$inferInsert;
+export type Invite = typeof invites.$inferSelect;
+export type NewInvite = typeof invites.$inferInsert;

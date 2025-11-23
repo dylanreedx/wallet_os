@@ -9,6 +9,7 @@ import { budgetRoutes } from './routes/budget.js';
 import { socialRoutes } from './routes/social.js';
 import { authRoutes } from './routes/auth.js';
 import { monthlyExpensesRoutes } from './routes/monthlyExpenses.js';
+import { aiRoutes } from './routes/ai.js';
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ const start = async () => {
     await fastify.register(budgetRoutes);
     await fastify.register(socialRoutes);
     await fastify.register(monthlyExpensesRoutes);
+    await fastify.register(aiRoutes);
 
     const port = Number(process.env.PORT) || 3001;
     const host = process.env.HOST || '0.0.0.0';

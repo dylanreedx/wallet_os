@@ -1,9 +1,203 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../db/index.js';
-import { sharedGoals, goals, users } from '../db/dbSchema.js';
+import { sharedGoals, users, goals, friends, invites } from '../db/dbSchema.js';
 import { eq, and, or } from 'drizzle-orm';
+import { randomBytes } from 'crypto';
 
 export async function socialRoutes(fastify: FastifyInstance) {
+  // Invite a friend (by email)
+  fastify.post('/api/social/friends/invite', async (request, reply) => {
+    const { email } = request.body as { email: string };
+    // @ts-ignore
+    const userId = request.user?.id;
+
+    if (!userId) return reply.status(401).send({ error: 'Unauthorized' });
+
+    // Find user by email
+    const friend = await db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
+
+    if (!friend) {
+      return reply.status(404).send({ error: 'User not found' });
+    }
+
+    if (friend.id === userId) {
+      return reply.status(400).send({ error: 'Cannot invite yourself' });
+    }
+
+    // Check if already friends
+    const existing = await db.query.friends.findFirst({
+      where: or(
+        and(eq(friends.userId, userId), eq(friends.friendId, friend.id)),
+        and(eq(friends.userId, friend.id), eq(friends.friendId, userId))
+      ),
+    });
+
+    if (existing) {
+      return reply.status(400).send({ error: 'Already friends or pending' });
+    }
+
+    // Create friendship request
+    await db.insert(friends).values({
+      userId,
+      friendId: friend.id,
+      status: 'pending',
+    });
+
+    return { message: 'Invitation sent' };
+  });
+
+  // Create invite link
+  fastify.post<{
+    Body: {
+      userId: number;
+    };
+  }>('/api/social/friends/invite-link', async (request, reply) => {
+    const { userId } = request.body;
+
+    if (!userId) {
+      return reply.status(400).send({ error: 'userId is required' });
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    await db.insert(invites).values({
+      creatorId: userId,
+      token,
+      expiresAt,
+    });
+
+    // Use configured frontend URL or default to localhost
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const link = `${baseUrl}/invite?token=${token}`;
+
+    return { link };
+  });
+
+  // Accept invite via token
+  fastify.post<{
+    Body: {
+      token: string;
+      userId: number;
+    };
+  }>('/api/social/friends/accept-invite', async (request, reply) => {
+    const { token, userId } = request.body;
+
+    if (!token || !userId) {
+      return reply.status(400).send({ error: 'token and userId are required' });
+    }
+
+    // Find the invite
+    const invite = await db.query.invites.findFirst({
+      where: and(
+        eq(invites.token, token),
+        eq(invites.used, false)
+      ),
+    });
+
+    if (!invite) {
+      return reply.status(404).send({ error: 'Invite not found or already used' });
+    }
+
+    // Check if expired
+    if (invite.expiresAt < new Date()) {
+      return reply.status(400).send({ error: 'Invite has expired' });
+    }
+
+    // Check if already friends
+    const existing = await db.query.friends.findFirst({
+      where: or(
+        and(eq(friends.userId, invite.creatorId), eq(friends.friendId, userId)),
+        and(eq(friends.userId, userId), eq(friends.friendId, invite.creatorId))
+      ),
+    });
+
+    if (existing) {
+      return reply.status(400).send({ error: 'Already friends' });
+    }
+
+    // Create friendship (auto-accepted since it's via invite)
+    await db.insert(friends).values({
+      userId: invite.creatorId,
+      friendId: userId,
+      status: 'accepted',
+    });
+
+    // Mark invite as used
+    await db
+      .update(invites)
+      .set({ used: true })
+      .where(eq(invites.id, invite.id));
+
+    return { message: 'Friendship created successfully' };
+  });
+
+  // Accept friend request
+  fastify.post('/api/social/friends/accept', async (request, reply) => {
+    const { friendId } = request.body as { friendId: number };
+    // @ts-ignore
+    const userId = request.user?.id;
+
+    if (!userId) return reply.status(401).send({ error: 'Unauthorized' });
+
+    // Find pending request where I am the friendId (recipient) and they are the userId (sender)
+    await db
+      .update(friends)
+      .set({ status: 'accepted' })
+      .where(
+        and(
+          eq(friends.userId, friendId),
+          eq(friends.friendId, userId),
+          eq(friends.status, 'pending')
+        )
+      );
+
+    return { message: 'Friend request accepted' };
+
+    return { message: 'Friend request accepted' };
+  });
+
+  // List friends
+  fastify.get<{
+    Querystring: {
+      userId: string;
+    };
+  }>('/api/social/friends', async (request, reply) => {
+    const { userId } = request.query;
+
+    if (!userId) {
+      return reply.status(400).send({ error: 'userId is required' });
+    }
+
+    const userIdInt = parseInt(userId);
+
+    const userFriends = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        status: friends.status,
+      })
+      .from(friends)
+      .innerJoin(
+        users,
+        or(
+          and(eq(friends.userId, userIdInt), eq(friends.friendId, users.id)),
+          and(eq(friends.friendId, userIdInt), eq(friends.userId, users.id))
+        )
+      )
+      .where(
+        or(
+          eq(friends.userId, userIdInt),
+          eq(friends.friendId, userIdInt)
+        )
+      );
+
+    return userFriends;
+  });
+
   // Share a goal with another user
   fastify.post<{
     Body: {

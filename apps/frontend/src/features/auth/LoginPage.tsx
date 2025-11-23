@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,11 +16,16 @@ import { Mail, ArrowRight } from 'lucide-react';
 type Step = 'request' | 'code';
 
 export default function LoginPage() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<Step>('request');
   const { login, verifyCode } = useAuth();
+
+  const redirectUrl = searchParams.get('redirect');
+  const isInvite = redirectUrl?.includes('/invite');
 
   const handleRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,8 +47,22 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await verifyCode(email, code);
-      // After successful login, reload so routing/auth state is consistent
-      window.location.href = '/';
+      
+      // Check if there's a pending invite
+      const pendingInvite = localStorage.getItem('pendingInviteToken');
+      console.log('[LoginPage] After login, pending invite:', pendingInvite);
+      
+      if (pendingInvite) {
+        // Use window.location to ensure full page reload with auth state
+        console.log('[LoginPage] Redirecting to invite page');
+        window.location.href = `/invite?token=${pendingInvite}`;
+      } else if (redirectUrl) {
+        // Use the redirect URL if provided
+        navigate(redirectUrl);
+      } else {
+        // Default to home
+        window.location.href = '/';
+      }
     } catch (error) {
       console.error('Code verification failed:', error);
       alert('Invalid or expired code. Please double-check and try again.');
@@ -106,10 +126,13 @@ export default function LoginPage() {
       <Card className="w-full max-w-md animate-in fade-in zoom-in-95 duration-300 border-border/50 shadow-lg">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold tracking-tight">
-            Welcome back
+            {isInvite ? 'Join your friend' : 'Welcome back'}
           </CardTitle>
           <CardDescription>
-            Enter your email to get a magic link and login code
+            {isInvite 
+              ? 'Enter your email to accept the invite and get started'
+              : 'Enter your email to get a magic link and login code'
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>
