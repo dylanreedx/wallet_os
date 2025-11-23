@@ -1,6 +1,14 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../db/index.js';
-import { sharedGoals, users, goals, friends, invites, notifications } from '../db/dbSchema';
+import {
+  sharedGoals,
+  users,
+  goals,
+  friends,
+  invites,
+  notifications,
+  NewNotification,
+} from '../db/dbSchema.js';
 import { eq, and, or } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 
@@ -46,13 +54,15 @@ export async function socialRoutes(fastify: FastifyInstance) {
     });
 
     // Create notification for the friend
-    await db.insert(notifications).values({
+    const inviteNotification: NewNotification = {
       userId: friend.id,
       type: 'invite',
       title: 'New Friend Request',
       message: 'Someone wants to be your friend!',
       link: '/friends',
-    });
+    };
+
+    await db.insert(notifications).values(inviteNotification);
 
     return { message: 'Invitation sent' };
   });
@@ -100,14 +110,13 @@ export async function socialRoutes(fastify: FastifyInstance) {
 
     // Find the invite
     const invite = await db.query.invites.findFirst({
-      where: and(
-        eq(invites.token, token),
-        eq(invites.used, false)
-      ),
+      where: and(eq(invites.token, token), eq(invites.used, false)),
     });
 
     if (!invite) {
-      return reply.status(404).send({ error: 'Invite not found or already used' });
+      return reply
+        .status(404)
+        .send({ error: 'Invite not found or already used' });
     }
 
     // Check if expired
@@ -141,13 +150,15 @@ export async function socialRoutes(fastify: FastifyInstance) {
       .where(eq(invites.id, invite.id));
 
     // Notify the creator
-    await db.insert(notifications).values({
+    const acceptanceNotification: NewNotification = {
       userId: invite.creatorId,
       type: 'invite',
       title: 'Friend Request Accepted',
       message: 'Your invite was accepted!',
       link: '/friends',
-    });
+    };
+
+    await db.insert(notifications).values(acceptanceNotification);
 
     return { message: 'Friendship created successfully' };
   });
@@ -173,13 +184,15 @@ export async function socialRoutes(fastify: FastifyInstance) {
       );
 
     // Notify the sender (who is now my friend)
-    await db.insert(notifications).values({
+    const senderNotification: NewNotification = {
       userId: friendId,
       type: 'invite',
       title: 'Friend Request Accepted',
       message: 'Your friend request was accepted!',
       link: '/friends',
-    });
+    };
+
+    await db.insert(notifications).values(senderNotification);
 
     return { message: 'Friend request accepted' };
 
@@ -216,10 +229,7 @@ export async function socialRoutes(fastify: FastifyInstance) {
         )
       )
       .where(
-        or(
-          eq(friends.userId, userIdInt),
-          eq(friends.friendId, userIdInt)
-        )
+        or(eq(friends.userId, userIdInt), eq(friends.friendId, userIdInt))
       );
 
     return userFriends;
@@ -266,15 +276,14 @@ export async function socialRoutes(fastify: FastifyInstance) {
       .select()
       .from(sharedGoals)
       .where(
-        and(
-          eq(sharedGoals.goalId, goalId),
-          eq(sharedGoals.userId, userId)
-        )
+        and(eq(sharedGoals.goalId, goalId), eq(sharedGoals.userId, userId))
       )
       .limit(1);
 
     if (existing.length > 0) {
-      return reply.code(409).send({ error: 'Goal already shared with this user' });
+      return reply
+        .code(409)
+        .send({ error: 'Goal already shared with this user' });
     }
 
     const insertValues = {
@@ -290,13 +299,15 @@ export async function socialRoutes(fastify: FastifyInstance) {
       .returning();
 
     // Notify the user
-    await db.insert(notifications).values({
+    const shareNotification: NewNotification = {
       userId,
       type: 'goal_share',
       title: 'Goal Shared With You',
       message: `You have been invited to collaborate on a goal.`,
       link: `/goals/${goalId}`,
-    });
+    };
+
+    await db.insert(notifications).values(shareNotification);
 
     return reply.code(201).send(result[0]);
   });
@@ -317,7 +328,7 @@ export async function socialRoutes(fastify: FastifyInstance) {
       .select({
         sharedGoal: sharedGoals,
         goal: goals,
-        owner: users
+        owner: users,
       })
       .from(sharedGoals)
       .innerJoin(goals, eq(sharedGoals.goalId, goals.id))
@@ -336,7 +347,7 @@ export async function socialRoutes(fastify: FastifyInstance) {
     const result = await db
       .select({
         sharedGoal: sharedGoals,
-        user: users
+        user: users,
       })
       .from(sharedGoals)
       .innerJoin(users, eq(sharedGoals.userId, users.id))

@@ -1,6 +1,13 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../db/index.js';
-import { goalChats, users, sharedGoals, goals, notifications } from '../db/dbSchema.js';
+import {
+  goalChats,
+  users,
+  sharedGoals,
+  goals,
+  notifications,
+  NewNotification,
+} from '../db/dbSchema.js';
 import { eq, asc, and, inArray, ne } from 'drizzle-orm';
 
 export async function goalChatRoutes(fastify: FastifyInstance) {
@@ -63,7 +70,8 @@ export async function goalChatRoutes(fastify: FastifyInstance) {
     const userName = request.user?.name || 'Someone';
 
     if (!userId) return reply.status(401).send({ error: 'Unauthorized' });
-    if (!message) return reply.status(400).send({ error: 'Message is required' });
+    if (!message)
+      return reply.status(400).send({ error: 'Message is required' });
 
     const goalIdInt = parseInt(goalId);
 
@@ -105,24 +113,26 @@ export async function goalChatRoutes(fastify: FastifyInstance) {
       .select({ userId: sharedGoals.userId })
       .from(sharedGoals)
       .where(eq(sharedGoals.goalId, goalIdInt));
-    
-    const participantIds = participants.map(p => p.userId);
+
+    const participantIds = participants.map((p) => p.userId);
     if (goal.userId !== userId) participantIds.push(goal.userId);
 
     // Filter out sender
-    const recipients = participantIds.filter(id => id !== userId);
+    const recipients = participantIds.filter((id) => id !== userId);
 
     if (recipients.length > 0) {
       // Create notifications
       // Note: In a real app, we might batch this or use a job queue
       for (const recipientId of recipients) {
-        await db.insert(notifications).values({
+        const chatNotification: NewNotification = {
           userId: recipientId,
           type: 'chat_message',
           title: `New message in ${goal.name}`,
           message: `${userName}: ${message}`,
           link: `/goals/${goalIdInt}`,
-        });
+        };
+
+        await db.insert(notifications).values(chatNotification);
       }
     }
 

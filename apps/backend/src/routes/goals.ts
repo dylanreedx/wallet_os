@@ -1,6 +1,11 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../db/index.js';
-import { goals, sharedGoals, notifications } from '../db/dbSchema.js';
+import {
+  goals,
+  sharedGoals,
+  notifications,
+  NewNotification,
+} from '../db/dbSchema.js';
 import { eq, desc } from 'drizzle-orm';
 
 export async function goalsRoutes(fastify: FastifyInstance) {
@@ -135,13 +140,15 @@ export async function goalsRoutes(fastify: FastifyInstance) {
       .where(eq(sharedGoals.goalId, parseInt(id)));
 
     for (const participant of participants) {
-      await db.insert(notifications).values({
+      const notification: NewNotification = {
         userId: participant.userId,
         type: 'goal_update',
         title: 'Goal Updated',
         message: `The goal "${result[0].name}" has been updated.`,
         link: `/goals/${id}`,
-      });
+      };
+
+      await db.insert(notifications).values(notification);
     }
 
     return reply.send(result[0]);

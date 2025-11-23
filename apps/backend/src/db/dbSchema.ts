@@ -225,6 +225,8 @@ export type NewFriend = typeof friends.$inferInsert;
 export type Invite = typeof invites.$inferSelect;
 export type NewInvite = typeof invites.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
-export type NewNotification = typeof notifications.$inferInsert;
+export type NewNotification = typeof notifications.$inferInsert & {
+  link?: string | null;
+};
 export type GoalChat = typeof goalChats.$inferSelect;
 export type NewGoalChat = typeof goalChats.$inferInsert;
