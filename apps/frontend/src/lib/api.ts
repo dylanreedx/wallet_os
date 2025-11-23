@@ -278,6 +278,35 @@ export const social = {
     fetchWithAuth(`/api/social/goals/${goalId}/users/${userId}`, {
       method: 'DELETE',
     }),
+  inviteFriend: (email: string) =>
+    fetchWithAuth('/api/social/friends/invite', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  getFriends: (userId: number) =>
+    fetchWithAuth(`/api/social/friends?userId=${userId}`),
+  acceptFriend: (friendId: number) =>
+    fetchWithAuth('/api/social/friends/accept', {
+      method: 'POST',
+      body: JSON.stringify({ friendId }),
+    }),
+};
+
+export const notifications = {
+  getAll: () => fetchWithAuth('/api/notifications'),
+  markRead: (id: number) =>
+    fetchWithAuth(`/api/notifications/${id}/read`, { method: 'PUT' }),
+  markAllRead: () =>
+    fetchWithAuth('/api/notifications/read-all', { method: 'PUT' }),
+};
+
+export const goalChats = {
+  getMessages: (goalId: number) => fetchWithAuth(`/api/goals/${goalId}/chat`),
+  sendMessage: (goalId: number, message: string) =>
+    fetchWithAuth(`/api/goals/${goalId}/chat`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    }),
 };
 
 export const api = {

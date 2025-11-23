@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../db/index.js';
-import { sharedGoals, users, goals, friends, invites } from '../db/dbSchema.js';
+import { sharedGoals, users, goals, friends, invites, notifications } from '../db/dbSchema';
 import { eq, and, or } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 
@@ -43,6 +43,15 @@ export async function socialRoutes(fastify: FastifyInstance) {
       userId,
       friendId: friend.id,
       status: 'pending',
+    });
+
+    // Create notification for the friend
+    await db.insert(notifications).values({
+      userId: friend.id,
+      type: 'invite',
+      title: 'New Friend Request',
+      message: 'Someone wants to be your friend!',
+      link: '/friends',
     });
 
     return { message: 'Invitation sent' };
@@ -131,6 +140,15 @@ export async function socialRoutes(fastify: FastifyInstance) {
       .set({ used: true })
       .where(eq(invites.id, invite.id));
 
+    // Notify the creator
+    await db.insert(notifications).values({
+      userId: invite.creatorId,
+      type: 'invite',
+      title: 'Friend Request Accepted',
+      message: 'Your invite was accepted!',
+      link: '/friends',
+    });
+
     return { message: 'Friendship created successfully' };
   });
 
@@ -153,6 +171,15 @@ export async function socialRoutes(fastify: FastifyInstance) {
           eq(friends.status, 'pending')
         )
       );
+
+    // Notify the sender (who is now my friend)
+    await db.insert(notifications).values({
+      userId: friendId,
+      type: 'invite',
+      title: 'Friend Request Accepted',
+      message: 'Your friend request was accepted!',
+      link: '/friends',
+    });
 
     return { message: 'Friend request accepted' };
 
@@ -261,6 +288,15 @@ export async function socialRoutes(fastify: FastifyInstance) {
       .insert(sharedGoals)
       .values(insertValues as any)
       .returning();
+
+    // Notify the user
+    await db.insert(notifications).values({
+      userId,
+      type: 'goal_share',
+      title: 'Goal Shared With You',
+      message: `You have been invited to collaborate on a goal.`,
+      link: `/goals/${goalId}`,
+    });
 
     return reply.code(201).send(result[0]);
   });

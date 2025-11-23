@@ -175,6 +175,35 @@ export const invites = sqliteTable('invites', {
     .$defaultFn(() => new Date()),
 });
 
+export const notifications = sqliteTable('notifications', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id),
+  type: text('type').notNull(), // invite, goal_share, goal_update, chat_message
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  link: text('link'), // Optional link to relevant resource
+  read: integer('read', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export const goalChats = sqliteTable('goal_chats', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  goalId: integer('goal_id')
+    .notNull()
+    .references(() => goals.id, { onDelete: 'cascade' }),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id),
+  message: text('message').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Expense = typeof expenses.$inferSelect;
@@ -195,3 +224,7 @@ export type Friend = typeof friends.$inferSelect;
 export type NewFriend = typeof friends.$inferInsert;
 export type Invite = typeof invites.$inferSelect;
 export type NewInvite = typeof invites.$inferInsert;
+export type Notification = typeof notifications.$inferSelect;
+export type NewNotification = typeof notifications.$inferInsert;
+export type GoalChat = typeof goalChats.$inferSelect;
+export type NewGoalChat = typeof goalChats.$inferInsert;

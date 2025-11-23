@@ -11,7 +11,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
+
 import { auth } from '@/lib/api';
+import { NotificationsDropdown } from '@/components/NotificationsDropdown';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -83,9 +85,12 @@ export default function Dashboard() {
               Welcome back, {user?.name || user?.email}
             </p>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <NotificationsDropdown />
+            <Button variant="outline" onClick={handleLogout}>
+              Logout
+            </Button>
+          </div>
         </div>
 
         <Card>

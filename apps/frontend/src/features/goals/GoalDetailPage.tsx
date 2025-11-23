@@ -16,6 +16,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { GoalChat } from './GoalChat';
 
 export default function GoalDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -344,6 +345,10 @@ export default function GoalDetailPage() {
             </div>
           </div>
         )}
+
+        <div className="mt-8">
+          <GoalChat goalId={goal.id} />
+        </div>
       </div>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

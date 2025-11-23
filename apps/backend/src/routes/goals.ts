@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../db/index.js';
-import { goals } from '../db/dbSchema.js';
+import { goals, sharedGoals, notifications } from '../db/dbSchema.js';
 import { eq, desc } from 'drizzle-orm';
 
 export async function goalsRoutes(fastify: FastifyInstance) {
@@ -126,6 +126,22 @@ export async function goalsRoutes(fastify: FastifyInstance) {
 
     if (result.length === 0) {
       return reply.code(404).send({ error: 'Goal not found' });
+    }
+
+    // Notify participants
+    const participants = await db
+      .select({ userId: sharedGoals.userId })
+      .from(sharedGoals)
+      .where(eq(sharedGoals.goalId, parseInt(id)));
+
+    for (const participant of participants) {
+      await db.insert(notifications).values({
+        userId: participant.userId,
+        type: 'goal_update',
+        title: 'Goal Updated',
+        message: `The goal "${result[0].name}" has been updated.`,
+        link: `/goals/${id}`,
+      });
     }
 
     return reply.send(result[0]);

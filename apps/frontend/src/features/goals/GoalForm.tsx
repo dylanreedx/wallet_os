@@ -3,7 +3,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
-import { goals, goalItems } from '@/lib/api';
+import { goals, goalItems, social } from '@/lib/api';
+import { useFriends } from '@/hooks/useFriends';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -61,6 +63,8 @@ const goalFormSchema = z.object({
       },
       { message: 'Total goal amount must be greater than 0' }
     ),
+
+  sharedWith: z.array(z.number()).optional(),
 });
 
 type GoalFormValues = z.infer<typeof goalFormSchema>;
@@ -79,6 +83,7 @@ export function GoalForm({
   goalId,
 }: GoalFormProps) {
   const { user } = useAuth();
+  const { friends } = useFriends();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -92,6 +97,7 @@ export function GoalForm({
       items: defaultValues?.items || [
         { name: '', price: undefined as any, quantity: 1 },
       ],
+      sharedWith: [],
     },
   });
 
@@ -207,6 +213,25 @@ export function GoalForm({
           deadline: format(new Date(), 'yyyy-MM-dd'),
           targetMonth: undefined,
           items: [{ name: '', price: undefined, quantity: 1 }],
+        });
+        // Share with selected friends
+        if (values.sharedWith && values.sharedWith.length > 0) {
+          for (const friendId of values.sharedWith) {
+            try {
+              await social.shareGoal(goal.id, friendId, 'contributor');
+            } catch (err) {
+              console.error(`Failed to share with friend ${friendId}`, err);
+            }
+          }
+        }
+
+        form.reset({
+          name: '',
+          description: '',
+          deadline: format(new Date(), 'yyyy-MM-dd'),
+          targetMonth: undefined,
+          items: [{ name: '', price: undefined, quantity: 1 }],
+          sharedWith: [],
         });
       }
       onSubmit?.(goal);
@@ -427,7 +452,61 @@ export function GoalForm({
               This will be set as your target amount
             </p>
           </div>
+
         </div>
+
+        {friends.length > 0 && (
+          <FormField
+            control={form.control as any}
+            name="sharedWith"
+            render={() => (
+              <FormItem>
+                <div className="mb-4">
+                  <FormLabel className="text-base">Share with Friends</FormLabel>
+                  <FormDescription>
+                    Select friends to collaborate on this goal.
+                  </FormDescription>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {friends.map((friend: any) => (
+                    <FormField
+                      key={friend.id}
+                      control={form.control as any}
+                      name="sharedWith"
+                      render={({ field }) => {
+                        return (
+                          <FormItem
+                            key={friend.id}
+                            className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"
+                          >
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value?.includes(friend.id)}
+                                onCheckedChange={(checked) => {
+                                  return checked
+                                    ? field.onChange([...(field.value || []), friend.id])
+                                    : field.onChange(
+                                        field.value?.filter(
+                                          (value: number) => value !== friend.id
+                                        )
+                                      );
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer w-full">
+                              {friend.name || friend.email}
+                            </FormLabel>
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {submitError && (
           <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
