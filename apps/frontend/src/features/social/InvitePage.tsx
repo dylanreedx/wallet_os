@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,11 +25,12 @@ export default function InvitePage() {
       return;
     }
 
-    // If not logged in, store token and redirect to login
+    // If not logged in, store token and show login prompt (stay on invite page)
     if (!user) {
-      console.log('[InvitePage] Not logged in, storing token and redirecting');
+      console.log('[InvitePage] Not logged in, storing token');
       localStorage.setItem('pendingInviteToken', token);
-      navigate('/login');
+      setStatus('error'); // Use error state to show login prompt
+      setMessage('Please log in to accept this invite');
       return;
     }
 
@@ -89,20 +90,30 @@ export default function InvitePage() {
   }
 
   if (status === 'error') {
+    const isLoginRequired = !user && token;
+    
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
               <XCircle className="h-5 w-5" />
-              Invalid Invite
+              {isLoginRequired ? 'Login Required' : 'Invalid Invite'}
             </CardTitle>
             <CardDescription>{message}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/')} className="w-full">
-              Go to Dashboard
-            </Button>
+          <CardContent className="space-y-2">
+            {isLoginRequired ? (
+              <Button asChild className="w-full">
+                <Link to={`/login?redirect=${encodeURIComponent(`/invite?token=${token}`)}`}>
+                  Log In to Accept Invite
+                </Link>
+              </Button>
+            ) : (
+              <Button onClick={() => navigate('/')} className="w-full">
+                Go to Dashboard
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>

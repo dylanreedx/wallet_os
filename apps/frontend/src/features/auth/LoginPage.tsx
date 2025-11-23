@@ -25,7 +25,8 @@ export default function LoginPage() {
   const { login, verifyCode } = useAuth();
 
   const redirectUrl = searchParams.get('redirect');
-  const isInvite = redirectUrl?.includes('/invite');
+  const pendingInviteToken = localStorage.getItem('pendingInviteToken');
+  const isInvite = redirectUrl?.includes('/invite') || !!pendingInviteToken;
 
   const handleRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,14 +49,22 @@ export default function LoginPage() {
     try {
       await verifyCode(email, code);
       
-      // Check if there's a pending invite
+      // Check if there's a pending invite or redirect to invite
       const pendingInvite = localStorage.getItem('pendingInviteToken');
-      console.log('[LoginPage] After login, pending invite:', pendingInvite);
+      const isInviteRedirect = redirectUrl?.includes('/invite');
       
-      if (pendingInvite) {
-        // Use window.location to ensure full page reload with auth state
-        console.log('[LoginPage] Redirecting to invite page');
+      console.log('[LoginPage] After login, pending invite:', pendingInvite, 'redirectUrl:', redirectUrl);
+      
+      if (isInviteRedirect && redirectUrl) {
+        // Redirect URL already has the token, use it directly
+        console.log('[LoginPage] Redirecting to invite page via redirectUrl');
+        window.location.href = redirectUrl;
+        localStorage.removeItem('pendingInviteToken'); // Clean up
+      } else if (pendingInvite) {
+        // Use pending invite token from localStorage
+        console.log('[LoginPage] Redirecting to invite page with pending token');
         window.location.href = `/invite?token=${pendingInvite}`;
+        localStorage.removeItem('pendingInviteToken');
       } else if (redirectUrl) {
         // Use the redirect URL if provided
         navigate(redirectUrl);
