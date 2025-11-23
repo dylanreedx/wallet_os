@@ -221,9 +221,13 @@ export type NewMonthlyExpense = typeof monthlyExpenses.$inferInsert;
 export type MagicLink = typeof magicLinks.$inferSelect;
 export type NewMagicLink = typeof magicLinks.$inferInsert;
 export type Friend = typeof friends.$inferSelect;
-export type NewFriend = typeof friends.$inferInsert;
+export type NewFriend = typeof friends.$inferInsert & {
+  status?: string | null;
+};
 export type Invite = typeof invites.$inferSelect;
-export type NewInvite = typeof invites.$inferInsert;
+export type NewInvite = typeof invites.$inferInsert & {
+  used?: boolean | null;
+};
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert & {
   link?: string | null;

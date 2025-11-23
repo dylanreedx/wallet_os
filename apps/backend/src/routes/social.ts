@@ -8,6 +8,8 @@ import {
   invites,
   notifications,
   NewNotification,
+  NewFriend,
+  NewInvite,
 } from '../db/dbSchema.js';
 import { eq, and, or } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
@@ -47,11 +49,12 @@ export async function socialRoutes(fastify: FastifyInstance) {
     }
 
     // Create friendship request
-    await db.insert(friends).values({
+    const friendshipRequest: NewFriend = {
       userId,
       friendId: friend.id,
       status: 'pending',
-    });
+    };
+    await db.insert(friends).values(friendshipRequest);
 
     // Create notification for the friend
     const inviteNotification: NewNotification = {
@@ -137,16 +140,18 @@ export async function socialRoutes(fastify: FastifyInstance) {
     }
 
     // Create friendship (auto-accepted since it's via invite)
-    await db.insert(friends).values({
+    const autoAcceptedFriendship: NewFriend = {
       userId: invite.creatorId,
       friendId: userId,
       status: 'accepted',
-    });
+    };
+    await db.insert(friends).values(autoAcceptedFriendship);
 
     // Mark invite as used
+    const inviteUsageUpdate: Pick<NewInvite, 'used'> = { used: true };
     await db
       .update(invites)
-      .set({ used: true })
+      .set(inviteUsageUpdate)
       .where(eq(invites.id, invite.id));
 
     // Notify the creator
