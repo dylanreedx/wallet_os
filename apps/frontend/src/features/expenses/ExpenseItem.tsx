@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Edit, Repeat, DollarSign } from 'lucide-react';
+import { Trash2, Edit, Repeat, DollarSign, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
 
 // Parse color from JSON string or return defaults
 const parseExpenseColor = (colorJson: string | null): ExpenseColor | null => {
@@ -38,8 +39,12 @@ interface ExpenseItemProps {
   onDelete: (id: number) => void;
   isRecurring?: boolean;
   isDragging?: boolean;
+  isAnyItemDragging?: boolean;
+  isDragOrigin?: boolean;
+  isPressed?: boolean;
   onSwipeStart?: () => void;
   onSwipeEnd?: () => void;
+  dragHandleProps?: any;
 }
 
 // Swipe configuration constants
@@ -68,8 +73,12 @@ export function ExpenseItem({
   onDelete,
   isRecurring,
   isDragging,
+  isAnyItemDragging,
+  isDragOrigin,
+  isPressed,
   onSwipeStart,
   onSwipeEnd,
+  dragHandleProps,
 }: ExpenseItemProps) {
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
@@ -287,6 +296,8 @@ export function ExpenseItem({
     }
   }, [isDragging, swipeOffset]);
 
+  const canOpenDialog = !isDragging && !isSwiping && !isAnyItemDragging;
+
   return (
     <div className="relative overflow-hidden">
       {/* Delete Action Background */}
@@ -320,7 +331,9 @@ export function ExpenseItem({
           // Use smooth transition only when not actively swiping
           isAnimating && 'transition-transform duration-300 ease-out',
           !isSwiping && !isAnimating && 'transition-transform duration-150',
-          isDragging && 'pointer-events-none opacity-70 scale-[0.98]'
+          isDragging && 'pointer-events-none opacity-70 scale-[0.98]',
+          isAnyItemDragging && !isDragging && 'opacity-90',
+          isPressed && !isDragging && 'bg-accent/50'
         )}
         style={{
           transform: `translateX(${swipeOffset}px)`,
@@ -328,14 +341,38 @@ export function ExpenseItem({
           userSelect: 'none',
           WebkitUserSelect: 'none',
           WebkitTouchCallout: 'none',
+          touchAction: 'pan-y',
         }}
         onTouchStart={isDragging ? undefined : handleTouchStart}
         onTouchMove={isDragging ? undefined : handleTouchMove}
         onTouchEnd={isDragging ? undefined : handleTouchEnd}
         onDragStart={(e) => e.preventDefault()} // Prevent native drag
         onContextMenu={(e) => e.preventDefault()} // Prevent context menu
+        role="button"
+        tabIndex={0}
+        aria-label={`Edit ${expense.description}`}
+        onClick={() => {
+          if (canOpenDialog) {
+            handleEdit();
+          }
+        }}
+        onKeyDown={(e) => {
+          if (!canOpenDialog) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleEdit();
+          }
+        }}
       >
         <div className="flex items-center gap-2 md:gap-3 w-full">
+          {/* Drag Handle */}
+          <div
+            {...dragHandleProps}
+            className="touch-none cursor-grab active:cursor-grabbing p-1 -ml-1 text-muted-foreground/50 hover:text-foreground transition-colors"
+          >
+            <GripVertical className="h-4 w-4" />
+          </div>
+
           {/* Icon Indicator - Colorful */}
           <div
             className={cn(
@@ -362,10 +399,15 @@ export function ExpenseItem({
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
+            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
               <p className="text-sm font-medium truncate text-foreground">
                 {expense.description}
               </p>
+              {isDragOrigin && (
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary">
+                  Moving
+                </span>
+              )}
               {isRecurring && (
                 <span
                   className="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-bold border-[0.5px] shrink-0"
@@ -395,7 +437,7 @@ export function ExpenseItem({
           </div>
 
           {/* Amount & Actions */}
-          <div className="flex items-center gap-2 shrink-0 min-w-[80px]">
+          <div className="flex items-center gap-2 shrink-0 min-w-[80px] justify-end">
             <p className="text-sm font-semibold tabular-nums text-foreground whitespace-nowrap">
               ${expense.amount.toFixed(2)}
             </p>
@@ -404,7 +446,10 @@ export function ExpenseItem({
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7"
-                onClick={handleEdit}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit();
+                }}
                 aria-label="Edit expense"
               >
                 <Edit className="h-3.5 w-3.5" />
@@ -413,7 +458,10 @@ export function ExpenseItem({
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 text-destructive hover:text-destructive"
-                onClick={handleDelete}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete();
+                }}
                 aria-label="Delete expense"
               >
                 <Trash2 className="h-3.5 w-3.5" />

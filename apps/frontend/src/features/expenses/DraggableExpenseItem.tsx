@@ -1,8 +1,22 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, createContext, useContext, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ExpenseItem } from './ExpenseItem';
 import { cn } from '@/lib/utils';
+
+export interface DragStateValue {
+  activeId: string | null;
+  originDateKey: string | null;
+  originIndex: number | null;
+}
+
+export const DragStateContext = createContext<DragStateValue>({
+  activeId: null,
+  originDateKey: null,
+  originIndex: null,
+});
+
+export const useDragState = () => useContext(DragStateContext);
 
 interface Expense {
   id: number;
@@ -40,6 +54,7 @@ export function DraggableExpenseItem({
     attributes,
     listeners,
     setNodeRef,
+    setActivatorNodeRef,
     transform,
     transition,
     isDragging,
@@ -47,102 +62,51 @@ export function DraggableExpenseItem({
     id: expense.id.toString(),
   });
 
-  // Track press duration for visual feedback
-  const [isHolding, setIsHolding] = useState(false);
-  const [isSwiping, setIsSwiping] = useState(false);
-  const holdTimerRef = useRef<number | null>(null);
-  const touchStartTimeRef = useRef<number | null>(null);
-
-  // Handle touch start to track hold duration
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartTimeRef.current = Date.now();
-    setIsHolding(true);
-
-    // Show visual feedback after 300ms (before 500ms activation)
-    holdTimerRef.current = window.setTimeout(() => {
-      // Visual feedback that drag is about to activate
-      if ('vibrate' in navigator) {
-        navigator.vibrate(10);
-      }
-    }, 300);
-  };
-
-  // Handle touch end to reset hold state
-  const handleTouchEnd = () => {
-    if (holdTimerRef.current) {
-      clearTimeout(holdTimerRef.current);
-      holdTimerRef.current = null;
-    }
-    setIsHolding(false);
-    touchStartTimeRef.current = null;
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (holdTimerRef.current) {
-        clearTimeout(holdTimerRef.current);
-      }
-    };
-  }, []);
-
+  const dragState = useDragState();
+  const isActiveDrag = dragState.activeId === expense.id.toString();
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? -1 : undefined,
   };
-
-  // Conditionally apply listeners - disable when swiping
-  // When swiping, we don't want drag listeners to interfere
-  const dragListeners = isSwiping
-    ? {} // Empty listeners when swiping - prevents drag activation
-    : {
-        ...listeners,
-        onTouchStart: (e: React.TouchEvent) => {
-          handleTouchStart(e);
-          // Call original listener if it exists
-          if (listeners?.onTouchStart) {
-            listeners.onTouchStart(e);
-          }
-        },
-        onTouchEnd: (e: React.TouchEvent) => {
-          handleTouchEnd();
-          // Call original listener if it exists
-          if (listeners?.onTouchEnd) {
-            listeners.onTouchEnd(e);
-          }
-        },
-      };
 
   return (
     <div
       ref={setNodeRef}
       style={{
         ...style,
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        WebkitTouchCallout: 'none',
+        touchAction: 'manipulation',
       }}
       {...attributes}
-      {...dragListeners}
       className={cn(
-        'cursor-grab active:cursor-grabbing select-none',
-        'transition-transform duration-200',
-        isHolding && !isDragging && 'scale-[1.02] opacity-90',
+        'transition-all duration-200',
         isDragging && 'scale-105 opacity-70'
       )}
-      onDragStart={(e) => e.preventDefault()} // Prevent native drag
-      onContextMenu={(e) => e.preventDefault()} // Prevent context menu on long press
     >
-      <ExpenseItem
-        expense={expense}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        isRecurring={isRecurring}
-        isDragging={isDragging}
-        onSwipeStart={() => setIsSwiping(true)}
-        onSwipeEnd={() => setIsSwiping(false)}
-      />
+      {isDragging ? (
+        <div className="w-full h-[72px] rounded-lg border-2 border-dashed border-primary/20 bg-primary/5 p-3 flex items-center gap-3 animate-pulse">
+          <div className="h-8 w-8 rounded-full bg-primary/10" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-24 bg-primary/10 rounded" />
+            <div className="h-3 w-16 bg-primary/5 rounded" />
+          </div>
+          <div className="h-4 w-12 bg-primary/10 rounded" />
+        </div>
+      ) : (
+          <ExpenseItem
+            expense={expense}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            isRecurring={isRecurring}
+            isDragging={isDragging}
+            isAnyItemDragging={Boolean(dragState.activeId)}
+            isDragOrigin={isActiveDrag}
+            dragHandleProps={{
+              ...listeners,
+              ref: setActivatorNodeRef,
+            }}
+          />
+      )}
     </div>
   );
 }
