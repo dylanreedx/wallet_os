@@ -150,7 +150,7 @@ export async function socialRoutes(fastify: FastifyInstance) {
     // Mark invite as used
     await db
       .update(invites)
-      .set({ used: true })
+      .set({ used: true } as any)
       .where(eq(invites.id, invite.id));
 
     // Notify the creator
@@ -178,7 +178,7 @@ export async function socialRoutes(fastify: FastifyInstance) {
     // Find pending request where I am the friendId (recipient) and they are the userId (sender)
     await db
       .update(friends)
-      .set({ status: 'accepted' })
+      .set({ status: 'accepted' } as any)
       .where(
         and(
           eq(friends.userId, friendId),
