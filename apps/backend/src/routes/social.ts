@@ -199,8 +199,6 @@ export async function socialRoutes(fastify: FastifyInstance) {
     await db.insert(notifications).values(senderNotification);
 
     return { message: 'Friend request accepted' };
-
-    return { message: 'Friend request accepted' };
   });
 
   // List friends

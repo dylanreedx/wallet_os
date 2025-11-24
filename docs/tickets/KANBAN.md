@@ -4,11 +4,12 @@
 
 ## Board Status
 
-- **Total Tickets**: 101
-- **DONE**: 70 (Phases 1-3 complete, Phase 4 enhanced, Phase 8 enhanced, Phase 9 started, Phase 10 started)
-- **TODO**: 31 (Phases 4-11 remaining)
+- **Total Tickets**: 102
+- **DONE**: 72 (Phases 1-3 complete, Phase 4 enhanced, Phase 8 mostly complete, Phase 9 started, Phase 10 started)
+- **TODO**: 30 (Phases 4-11 remaining)
 - **IN PROGRESS**: 0
 - **QA**: 0
+- **BUGS**: 2 (Auth onboarding missing, duplicate return statement)
 
 ---
 
@@ -49,6 +50,7 @@
 - [P3-004: Basic dashboard](./P3-004-basic-dashboard.md) ✅
 - [P3-005: React Router setup](./P3-005-react-router-setup.md) ✅
 - [P3-006: shadcn/ui components installation](./P3-006-shadcn-ui-components-installation.md) ✅
+- [P3-008: User Onboarding - Name & Income Collection](./P3-008-user-onboarding.md) ⚠️ **BUG** - Missing onboarding step for name (required) and monthly income (optional)
 
 ### Phase 9: PWA & Mobile Optimization (1 ticket completed)
 
@@ -109,23 +111,25 @@
 - [x] P8-011: Notifications System
 - [x] P8-012: Goal Chat
 - [x] P8-013: Goal Friend Sharing UI
+- [x] P8-001: Share Goal UI (Partial - implemented in GoalForm, missing share button on existing goals)
+- [x] P8-002: Shared Goals List (Partial - implemented in GoalsPage, missing role badges/filtering)
 
 ---
 
 ## TODO 📋
 
 ### Phase 4: Core UI Components & Layout (Completed)
+
 _All critical Phase 4 tickets are complete._
 
-### Phase 8: Social Features (Prioritized)
+### Phase 8: Social Features (Remaining)
 
-- [P8-001: Share Goal UI](./P8-001-share-goal-ui.md)
-- [P8-002: Shared Goals List](./P8-002-shared-goals-list.md)
+- [P8-001: Share Goal UI - Share Button on Existing Goals](./P8-001-share-goal-ui.md) (Partial - share during creation done, need share button on goal cards)
+- [P8-002: Shared Goals List - Role Badges & Filtering](./P8-002-shared-goals-list.md) (Partial - list display done, need role badges/filtering)
 - [P8-003: Collaborative Goal Tracking](./P8-003-collaborative-goal-tracking.md)
-- [P8-004: User Invitation System](./P8-004-user-invitation-system.md)
 - [P8-005: Role Management](./P8-005-role-management.md)
 - [P8-006: Shared Expense Contributions](./P8-006-shared-expense-contributions.md)
-- [P8-007: Expense Visibility Controls](./P8-007-expense-visibility-controls.md) (New)
+- [P8-007: Expense Visibility Controls](./P8-007-expense-visibility-controls.md)
 
 ### Phase 12: AI Integration ("The Brain") (Prioritized)
 
@@ -191,6 +195,12 @@ _No tickets currently in QA_
 - Click on any ticket to view detailed information
 - Move tickets between columns as work progresses
 - Update this board when ticket status changes
+- **2025-11-23 (21:47 EST)**: Full audit completed. Updated kanban board to reflect actual implementation status:
+  - P8-001 & P8-002 marked as partially complete (share during creation works, shared goals list displays, but missing share button on cards and role badges)
+  - Friend request accept/reject works via invite links (not a bug)
+  - Pending friend requests are visible in FriendsList
+  - **CRITICAL BUG**: Auth flow missing onboarding step for name (required) and monthly income (optional) - users can't set these during signup
+  - Duplicate return statement bug found in `apps/backend/src/routes/social.ts` line 203 (needs fix)
 - **2025-11-23**: Completed Social Features Integration (P8-011, P8-012, P8-013): Implemented notifications system with real-time polling, goal chat for collaboration, and friend sharing UI in goal form. Added database tables for notifications and goal_chats. Integrated NotificationsDropdown in Dashboard header.
 - **2025-11-23**: Audited board. Prioritized Phase 8 (Social) and Phase 12 (AI Integration). Archived completed Phase 4 tickets.
 - **2025-11-05**: Completed 6 critical mobile UX improvement tickets (P4-020 through P4-025): Added drag handle to prevent accidental drags, implemented compact/expanded MonthlySummary toggle, added chart animations, fixed expense item full-width layout, and implemented keyboard-aware modals using visualViewport API. All tickets ready for QA testing.
@@ -198,4 +208,3 @@ _No tickets currently in QA_
 - **2025-11-06**: Vertical spacing compacting initiative COMPLETE - 6 tickets implemented (P4-013 through P4-018) transforming ExpensesPage into ultra-compact, information-dense layout inspired by Stripe, Linear, and modern data tables. Result: 45-50% more content visible per screen with professional aesthetic.
 - **2025-11-05**: Expense Color System (P4-019) - Added automatic color assignment for expenses with friendly accessible palette. Colors appear on icons and badges while main borders remain neutral. Changed "AUTO" to "SUBSCRIPTION" label. Created migration and seed script for backfilling existing expenses.
 - **2025-11-19**: Implemented Secure Authentication (Magic Links) with Resend integration (P2-011, P3-007). Generated premium PWA assets (P9-002). Codebase analysis completed.
-
