@@ -1,15 +1,15 @@
 # Wallet OS - KANBAN Board
 
-**Last Updated**: 2025-11-23 (Social Features Integration)
+**Last Updated**: 2025-01-27 (Bug Documentation & Feature Requests)
 
 ## Board Status
 
-- **Total Tickets**: 102
+- **Total Tickets**: 109
 - **DONE**: 72 (Phases 1-3 complete, Phase 4 enhanced, Phase 8 mostly complete, Phase 9 started, Phase 10 started)
-- **TODO**: 30 (Phases 4-11 remaining)
+- **TODO**: 37 (Phases 4-11 remaining, plus new bugs and enhancements)
 - **IN PROGRESS**: 0
 - **QA**: 0
-- **BUGS**: 2 (Auth onboarding missing, duplicate return statement)
+- **BUGS**: 7 (Auth onboarding missing, duplicate return statement, session validation, goal quantity input, modal centering, expense list refresh)
 
 ---
 
@@ -118,9 +118,9 @@
 
 ## TODO 📋
 
-### Phase 4: Core UI Components & Layout (Completed)
+### Phase 4: Core UI Components & Layout (21 tickets completed, 1 remaining)
 
-_All critical Phase 4 tickets are complete._
+- [P4-026: Expense Modal UI/UX Rework](./P4-026-expense-modal-ux-rework.md) - Comprehensive modal improvements (scrolling, recurring UI, keyboard handling)
 
 ### Phase 8: Social Features (Remaining)
 
@@ -130,6 +130,7 @@ _All critical Phase 4 tickets are complete._
 - [P8-005: Role Management](./P8-005-role-management.md)
 - [P8-006: Shared Expense Contributions](./P8-006-shared-expense-contributions.md)
 - [P8-007: Expense Visibility Controls](./P8-007-expense-visibility-controls.md)
+- [P8-014: Profile Page Improvements](./P8-014-profile-page-improvements.md) - Fix styling issues, add edit name/budget, expand settings
 
 ### Phase 12: AI Integration ("The Brain") (Prioritized)
 
@@ -162,7 +163,7 @@ _All critical Phase 4 tickets are complete._
 
 ### Phase 10: Polish & Enhancements (Remaining)
 
-- [P10-001: Loading States](./P10-001-loading-states.md)
+- [P10-001: Loading States](./P10-001-loading-states.md) ⚠️ **PRIORITY** - Replace "Loading x..." with skeleton loaders
 - [P10-002: Error Handling](./P10-002-error-handling.md)
 - [P10-003: Form Validation](./P10-003-form-validation.md)
 - [P10-004: Accessibility](./P10-004-accessibility.md)
@@ -189,6 +190,29 @@ _No tickets currently in QA_
 
 ---
 
+## BUGS 🐛
+
+### Critical Bugs
+
+- [BUG-001: New User Onboarding - Missing Name & Budget Step](./BUG-001-user-onboarding.md) - After OTP/magic link, users can't enter name (required) and monthly budget
+- [BUG-003: Invalid Session on App Return - Queries Don't Load](./BUG-003-invalid-session-queries.md) - Queries fail with invalid session when returning to app
+
+### Blocker Bugs
+
+- [BUG-002: Goal Quantity Field Input Issue](./BUG-002-goal-quantity-input.md) - Can't edit default value of 1 in quantity field
+
+### UI/UX Bugs
+
+- [BUG-004: Mobile Modal Centering and Keyboard Snapping](./BUG-004-mobile-modal-centering.md) - Modals off-centered on mobile, keyboard causes snapping
+- [BUG-005: Expense List Refresh Inconsistency](./BUG-005-expense-list-refresh.md) - List doesn't update on create/edit/date change
+
+### Known Issues
+
+- P3-008: User Onboarding - Missing onboarding step (duplicate of BUG-001)
+- Duplicate return statement in `apps/backend/src/routes/social.ts` line 203
+
+---
+
 ## Notes
 
 - Tickets are organized by phase and status
@@ -208,3 +232,8 @@ _No tickets currently in QA_
 - **2025-11-06**: Vertical spacing compacting initiative COMPLETE - 6 tickets implemented (P4-013 through P4-018) transforming ExpensesPage into ultra-compact, information-dense layout inspired by Stripe, Linear, and modern data tables. Result: 45-50% more content visible per screen with professional aesthetic.
 - **2025-11-05**: Expense Color System (P4-019) - Added automatic color assignment for expenses with friendly accessible palette. Colors appear on icons and badges while main borders remain neutral. Changed "AUTO" to "SUBSCRIPTION" label. Created migration and seed script for backfilling existing expenses.
 - **2025-11-19**: Implemented Secure Authentication (Magic Links) with Resend integration (P2-011, P3-007). Generated premium PWA assets (P9-002). Codebase analysis completed.
+- **2025-01-27**: Documented 8 bugs and feature requests:
+  - 5 new bug tickets (BUG-001 through BUG-005): User onboarding, session validation, goal quantity input, modal centering, expense list refresh
+  - 2 new enhancement tickets (P4-026, P8-014): Expense modal UX rework, profile page improvements
+  - Prioritized P10-001 (Skeleton loading states)
+  - All tickets added to KANBAN board with proper categorization
