@@ -47,13 +47,27 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await verifyCode(email, code);
+      const user = await verifyCode(email, code);
       
       // Check if there's a pending invite or redirect to invite
       const pendingInvite = localStorage.getItem('pendingInviteToken');
       const isInviteRedirect = redirectUrl?.includes('/invite');
       
       console.log('[LoginPage] After login, pending invite:', pendingInvite, 'redirectUrl:', redirectUrl);
+      
+      // Check if user needs onboarding (no name set)
+      if (!user.name) {
+        // Store any pending redirects for after onboarding
+        if (isInviteRedirect && redirectUrl) {
+          localStorage.setItem('postOnboardingRedirect', redirectUrl);
+        } else if (pendingInvite) {
+          localStorage.setItem('postOnboardingRedirect', `/invite?token=${pendingInvite}`);
+        } else if (redirectUrl) {
+          localStorage.setItem('postOnboardingRedirect', redirectUrl);
+        }
+        navigate('/onboarding');
+        return;
+      }
       
       if (isInviteRedirect && redirectUrl) {
         // Redirect URL already has the token, use it directly

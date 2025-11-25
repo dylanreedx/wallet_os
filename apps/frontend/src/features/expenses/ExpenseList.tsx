@@ -135,19 +135,35 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
 
   useEffect(() => {
     setOrderedExpenses((prev) => {
-      if (prev.length === expenses.length) {
-        let isSame = true;
-        for (let i = 0; i < prev.length; i += 1) {
-          if (prev[i]?.id !== expenses[i]?.id) {
-            isSame = false;
-            break;
-          }
-        }
-        if (isSame) {
-          return prev;
-        }
+      // If lengths differ, definitely update
+      if (prev.length !== expenses.length) {
+        return expenses;
       }
-      return expenses;
+      
+      // Check if data actually changed (not just order)
+      // We need to detect edits to amount, description, date, category, etc.
+      const prevMap = new Map(prev.map(e => [e.id, e]));
+      const hasDataChange = expenses.some((expense) => {
+        const prevExpense = prevMap.get(expense.id);
+        if (!prevExpense) return true; // New expense
+        // Check if any field changed
+        return (
+          expense.amount !== prevExpense.amount ||
+          expense.description !== prevExpense.description ||
+          expense.date !== prevExpense.date ||
+          expense.category !== prevExpense.category ||
+          expense.color !== prevExpense.color ||
+          expense.goalId !== prevExpense.goalId ||
+          expense.goalItemId !== prevExpense.goalItemId
+        );
+      });
+      
+      if (hasDataChange) {
+        return expenses;
+      }
+      
+      // IDs and data are the same, keep previous order (for drag-drop persistence)
+      return prev;
     });
   }, [expenses]);
 
@@ -388,12 +404,12 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
     if (originDateKey && currentDateKey !== originDateKey) {
       try {
         // Persist the date change
-        // We use the current date of the expense because we updated it during dragOver
-        const targetDate = new Date(draggedExpense.date);
+        // The date was already updated during dragOver to match the target group
+        // Pass it directly without re-parsing to avoid timezone issues
         await updateExpenseMutation.mutateAsync({
           id: draggedExpense.id,
           data: {
-            date: targetDate.toISOString(),
+            date: draggedExpense.date, // Already an ISO string from the target expense
           },
         });
       } catch (error) {

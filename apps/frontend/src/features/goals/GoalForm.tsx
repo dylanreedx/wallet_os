@@ -4,6 +4,8 @@ import * as z from 'zod';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { goals, goalItems, social } from '@/lib/api';
+import { useCreateGoal, useUpdateGoal } from '@/hooks/useGoals';
+import { useCreateGoalItem, useDeleteGoalItem } from '@/hooks/useGoalItems';
 import { useFriends } from '@/hooks/useFriends';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -84,6 +86,10 @@ export function GoalForm({
 }: GoalFormProps) {
   const { user } = useAuth();
   const { friends } = useFriends();
+  const createGoalMutation = useCreateGoal();
+  const updateGoalMutation = useUpdateGoal();
+  const createGoalItemMutation = useCreateGoalItem();
+  const deleteGoalItemMutation = useDeleteGoalItem();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -160,32 +166,38 @@ export function GoalForm({
       const selectedFriendIds = Array.from(new Set(values.sharedWith || []));
 
       if (goalId) {
-        // Update existing goal
-        goal = await goals.update(goalId, {
-          name: values.name,
-          targetAmount,
-          deadline: new Date(values.deadline).toISOString(),
-          targetMonth: targetMonth,
-          description: values.description || undefined,
+        // Update existing goal using mutation (triggers query invalidation)
+        goal = await updateGoalMutation.mutateAsync({
+          id: goalId,
+          data: {
+            name: values.name,
+            targetAmount,
+            deadline: new Date(values.deadline).toISOString(),
+            targetMonth: targetMonth,
+            description: values.description || undefined,
+          },
         });
 
-        // Update goal items (delete all and recreate)
+        // Update goal items (delete all and recreate) using mutations
         const existingItems = await goalItems.getAll(goalId);
         for (const item of existingItems) {
-          await goalItems.delete(goalId, item.id);
+          await deleteGoalItemMutation.mutateAsync({ goalId, itemId: item.id });
         }
         for (const item of values.items) {
-          await goalItems.create(goalId, {
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
+          await createGoalItemMutation.mutateAsync({
+            goalId,
+            data: {
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+            },
           });
         }
 
         goal = await goals.get(goalId);
       } else {
-        // Create new goal
-        goal = await goals.create({
+        // Create new goal using mutation (triggers query invalidation)
+        goal = await createGoalMutation.mutateAsync({
           userId: user.id,
           name: values.name,
           targetAmount,
@@ -194,12 +206,15 @@ export function GoalForm({
           description: values.description || undefined,
         });
 
-        // Create goal items
+        // Create goal items using mutation
         for (const item of values.items) {
-          await goalItems.create(goal.id, {
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
+          await createGoalItemMutation.mutateAsync({
+            goalId: goal.id,
+            data: {
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+            },
           });
         }
 
@@ -414,11 +429,18 @@ export function GoalForm({
                               {...field}
                               onChange={(e) => {
                                 const value = e.target.value;
-                                field.onChange(
-                                  value === '' ? undefined : parseInt(value, 10)
-                                );
+                                // Allow empty during editing, parse when there's a value
+                                if (value === '') {
+                                  field.onChange(1); // Reset to default when cleared
+                                } else {
+                                  const parsed = parseInt(value, 10);
+                                  if (!isNaN(parsed) && parsed >= 1) {
+                                    field.onChange(parsed);
+                                  }
+                                }
                               }}
-                              value={field.value || ''}
+                              onFocus={(e) => e.target.select()}
+                              value={field.value ?? 1}
                             />
                           </FormControl>
                           <FormMessage />

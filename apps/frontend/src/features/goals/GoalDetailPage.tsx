@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { goals, goalItems, expenses } from '@/lib/api';
+import { useDeleteGoal } from '@/hooks/useGoals';
+import { useUpdateGoalItem } from '@/hooks/useGoalItems';
 import { GoalFormDialog } from './GoalFormDialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -22,6 +24,8 @@ export default function GoalDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const deleteGoalMutation = useDeleteGoal();
+  const updateGoalItemMutation = useUpdateGoalItem();
   const [goal, setGoal] = useState<any>(null);
   const [goalItemsList, setGoalItemsList] = useState<any[]>([]);
   const [linkedExpenses, setLinkedExpenses] = useState<any[]>([]);
@@ -71,8 +75,11 @@ export default function GoalDetailPage() {
     if (!id) return;
 
     try {
-      await goalItems.update(parseInt(id), itemId, {
-        purchased: !currentlyPurchased,
+      // Use mutation for proper query invalidation
+      await updateGoalItemMutation.mutateAsync({
+        goalId: parseInt(id),
+        itemId,
+        data: { purchased: !currentlyPurchased },
       });
 
       // Reload goal data to update progress
@@ -87,7 +94,8 @@ export default function GoalDetailPage() {
 
     setIsDeleting(true);
     try {
-      await goals.delete(parseInt(id));
+      // Use mutation for proper query invalidation
+      await deleteGoalMutation.mutateAsync(parseInt(id));
       navigate('/goals');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete goal');
@@ -154,7 +162,8 @@ export default function GoalDetailPage() {
             defaultValues={{
               name: goal.name,
               description: goal.description,
-              deadline: format(new Date(goal.deadline), 'yyyy-MM-dd'),
+              // Extract date directly from ISO string to avoid timezone shift
+              deadline: goal.deadline.substring(0, 10),
               targetMonth: goal.targetMonth,
             }}
             onSuccess={handleGoalUpdated}
@@ -224,7 +233,7 @@ export default function GoalDetailPage() {
 
               <div className="flex items-center justify-between text-xs text-muted-foreground pt-2">
                 <span>
-                  Deadline: {format(new Date(goal.deadline), 'MMM dd, yyyy')}
+                  Deadline: {format(new Date(goal.deadline.substring(0, 10) + 'T12:00:00'), 'MMM dd, yyyy')}
                 </span>
                 <span
                   className={cn(
@@ -335,7 +344,7 @@ export default function GoalDetailPage() {
                     <div>
                       <p className="font-medium">{expense.description}</p>
                       <p className="text-sm text-muted-foreground">
-                        {format(new Date(expense.date), 'MMM dd, yyyy')}
+                        {format(new Date(expense.date.substring(0, 10) + 'T12:00:00'), 'MMM dd, yyyy')}
                       </p>
                     </div>
                     <p className="font-medium">${expense.amount.toFixed(2)}</p>

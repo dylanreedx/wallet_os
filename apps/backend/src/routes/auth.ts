@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../db/index.js';
-import { users, magicLinks } from '../db/dbSchema.js';
+import { users, magicLinks, sessions } from '../db/dbSchema.js';
 import { and, eq } from 'drizzle-orm';
 import { createSession, deleteSession } from '../middleware/auth.js';
 import { Resend } from 'resend';
@@ -249,6 +249,55 @@ export async function authRoutes(fastify: FastifyInstance) {
     return reply.code(204).send();
   });
 
+  // Validate session - checks if current session is still valid
+  fastify.get<{
+    Headers: {
+      'x-session-id'?: string;
+    };
+  }>('/api/auth/validate', async (request, reply) => {
+    const sessionId = request.headers['x-session-id'] as string;
+
+    if (!sessionId) {
+      return reply.code(401).send({ valid: false, error: 'No session' });
+    }
+
+    try {
+      const sessionResults = await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.id, sessionId))
+        .limit(1);
+
+      const session = sessionResults[0];
+
+      if (!session) {
+        return reply.code(401).send({ valid: false, error: 'Invalid session' });
+      }
+
+      if (session.expiresAt.getTime() < Date.now()) {
+        // Clean up expired session
+        await db.delete(sessions).where(eq(sessions.id, sessionId));
+        return reply.code(401).send({ valid: false, error: 'Session expired' });
+      }
+
+      // Get user data for the valid session
+      const user = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, session.userId))
+        .limit(1);
+
+      if (user.length === 0) {
+        return reply.code(401).send({ valid: false, error: 'User not found' });
+      }
+
+      return reply.send({ valid: true, user: user[0] });
+    } catch (error: any) {
+      console.error('[AUTH] Session validation error:', error.message);
+      return reply.code(401).send({ valid: false, error: 'Session validation failed' });
+    }
+  });
+
   // Get user income
   fastify.get<{
     Querystring: {
@@ -305,5 +354,50 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
 
     return reply.send({ monthlyIncome: updated[0].monthlyIncome });
+  });
+
+  // Update user profile (name, monthlyIncome) - used for onboarding
+  fastify.patch<{
+    Body: {
+      userId: number;
+      name?: string;
+      monthlyIncome?: number;
+    };
+  }>('/api/auth/profile', async (request, reply) => {
+    const { userId, name, monthlyIncome } = request.body;
+
+    if (!userId) {
+      return reply.code(400).send({ error: 'userId is required' });
+    }
+
+    const updateData: Record<string, any> = {
+      updatedAt: new Date(),
+    };
+
+    if (name !== undefined) {
+      if (typeof name !== 'string' || name.trim().length === 0) {
+        return reply.code(400).send({ error: 'Name must be a non-empty string' });
+      }
+      updateData.name = name.trim();
+    }
+
+    if (monthlyIncome !== undefined) {
+      if (typeof monthlyIncome !== 'number' || monthlyIncome < 0) {
+        return reply.code(400).send({ error: 'Monthly income must be a positive number' });
+      }
+      updateData.monthlyIncome = monthlyIncome;
+    }
+
+    const updated = await db
+      .update(users)
+      .set(updateData as any)
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (updated.length === 0) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+
+    return reply.send({ user: updated[0] });
   });
 }

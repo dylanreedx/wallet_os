@@ -4,6 +4,8 @@ import * as z from 'zod';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { expenses } from '@/lib/api';
+import { useCreateExpense, useUpdateExpense } from '@/hooks/useExpenses';
+import { useCreateMonthlyExpense, useUpdateMonthlyExpense } from '@/hooks/useMonthlyExpenses';
 import { brain } from '@/lib/ai';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -68,6 +70,10 @@ export function ExpenseForm({
   expenseId,
 }: ExpenseFormProps) {
   const { user } = useAuth();
+  const createExpenseMutation = useCreateExpense();
+  const updateExpenseMutation = useUpdateExpense();
+  const createMonthlyExpenseMutation = useCreateMonthlyExpense();
+  const updateMonthlyExpenseMutation = useUpdateMonthlyExpense();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [goalsList, setGoalsList] = useState<any[]>([]);
@@ -266,9 +272,12 @@ export function ExpenseForm({
         // Get the original expense before updating to check if it was recurring
         const originalExpense = await expenses.get(expenseId);
 
-        // Update existing expense
-        expense = await expenses.update(expenseId, expenseData);
-        // Fetch the updated expense to get full data
+        // Update existing expense using mutation (triggers query invalidation)
+        expense = await updateExpenseMutation.mutateAsync({
+          id: expenseId,
+          data: expenseData,
+        });
+        // Fetch the updated expense to get full data (mutation returns partial)
         expense = await expenses.get(expenseId);
 
         // Handle recurring expense updates
@@ -299,15 +308,18 @@ export function ExpenseForm({
               // User wants this expense to be recurring
               if (oldMatchingRecurring && !newMatchingRecurring) {
                 // Expense was recurring but description/amount changed
-                // Update the monthly expense to match new values
-                await monthlyExpenses.update(oldMatchingRecurring.id, {
-                  name: values.description,
-                  amount: values.amount,
-                  category: values.category || undefined,
+                // Update the monthly expense to match new values using mutation
+                await updateMonthlyExpenseMutation.mutateAsync({
+                  id: oldMatchingRecurring.id,
+                  data: {
+                    name: values.description,
+                    amount: values.amount,
+                    category: values.category || undefined,
+                  },
                 });
               } else if (!oldMatchingRecurring && !newMatchingRecurring) {
-                // Expense wasn't recurring, create new monthly expense
-                await monthlyExpenses.create({
+                // Expense wasn't recurring, create new monthly expense using mutation
+                await createMonthlyExpenseMutation.mutateAsync({
                   userId: user.id,
                   name: values.description,
                   amount: values.amount,
@@ -323,8 +335,9 @@ export function ExpenseForm({
                 // Expense was recurring, but now user doesn't want it to be
                 // We could delete it, but for now we'll just deactivate it
                 // This way it's preserved for future use but won't show as recurring
-                await monthlyExpenses.update(oldMatchingRecurring.id, {
-                  isActive: false,
+                await updateMonthlyExpenseMutation.mutateAsync({
+                  id: oldMatchingRecurring.id,
+                  data: { isActive: false },
                 });
               }
             }
@@ -334,16 +347,16 @@ export function ExpenseForm({
           }
         }
       } else {
-        // Create new expense
-        expense = await expenses.create({
+        // Create new expense using mutation (triggers query invalidation)
+        expense = await createExpenseMutation.mutateAsync({
           userId: user.id,
           ...expenseData,
         });
 
-        // If recurring, also create a monthly expense entry
+        // If recurring, also create a monthly expense entry using mutation
         if (values.isRecurring) {
           try {
-            await monthlyExpenses.create({
+            await createMonthlyExpenseMutation.mutateAsync({
               userId: user.id,
               name: values.description,
               amount: values.amount,

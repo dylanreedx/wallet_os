@@ -88,8 +88,10 @@ export function EditExpenseDialog({
 
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', updateViewportHeight);
+      window.visualViewport.addEventListener('scroll', updateViewportHeight);
       return () => {
         window.visualViewport?.removeEventListener('resize', updateViewportHeight);
+        window.visualViewport?.removeEventListener('scroll', updateViewportHeight);
       };
     } else {
       window.addEventListener('resize', updateViewportHeight);
@@ -131,8 +133,9 @@ export function EditExpenseDialog({
 
   if (!expense) return null;
 
-  // Format date for input (YYYY-MM-DD)
-  const formattedDate = format(new Date(expense.date), 'yyyy-MM-dd');
+  // Extract date part directly from ISO string to avoid timezone issues
+  // Using new Date() would convert UTC to local time, potentially shifting the day
+  const formattedDate = expense.date.substring(0, 10);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -150,7 +153,8 @@ export function EditExpenseDialog({
           'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
           'sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95',
           'p-3 sm:p-6 pb-6 sm:pb-6', // Tighter padding on mobile
-          'max-h-[90vh] sm:max-h-[85vh]' // Ensure max height for scrolling
+          'max-h-[90vh] sm:max-h-[85vh]', // Ensure max height for scrolling
+          'transition-[max-height] duration-150 ease-out' // Smooth height transition
         )}
         style={{
           maxHeight: isMobile && viewportHeight

@@ -29,16 +29,20 @@ export default function VerifyPage() {
       try {
         // Add a minimum delay to prevent flashing and show the skeleton
         const start = Date.now();
-        await verifyMagicLink(token);
+        const user = await verifyMagicLink(token);
         const elapsed = Date.now() - start;
         if (elapsed < 1500) {
           await new Promise(resolve => setTimeout(resolve, 1500 - elapsed));
         }
         
         setStatus('success');
-        // Redirect to dashboard after a short delay
+        // Redirect after a short delay - to onboarding if no name, otherwise dashboard
         setTimeout(() => {
-          navigate('/');
+          if (!user.name) {
+            navigate('/onboarding');
+          } else {
+            navigate('/');
+          }
         }, 2000);
       } catch (err: any) {
         setStatus('error');

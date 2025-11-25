@@ -5,6 +5,24 @@ const API_BASE =
   import.meta.env.VITE_API_URL ||
   (import.meta.env.DEV ? '' : 'https://wallet-os-backend.vercel.app');
 
+// Custom error class for authentication errors
+export class AuthError extends Error {
+  status: number;
+  constructor(message: string, status: number = 401) {
+    super(message);
+    this.name = 'AuthError';
+    this.status = status;
+  }
+}
+
+// Event-based auth error handling - allows AuthContext to subscribe
+type AuthErrorCallback = () => void;
+let onAuthErrorCallback: AuthErrorCallback | null = null;
+
+export function setAuthErrorCallback(callback: AuthErrorCallback | null) {
+  onAuthErrorCallback = callback;
+}
+
 async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
   const sessionId = localStorage.getItem('sessionId');
 
@@ -27,6 +45,16 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
     const error = await response
       .json()
       .catch(() => ({ error: 'Request failed' }));
+    
+    // Handle 401 errors - notify AuthContext to handle logout properly
+    if (response.status === 401) {
+      // Trigger the auth error callback (AuthContext will handle the cleanup)
+      if (onAuthErrorCallback) {
+        onAuthErrorCallback();
+      }
+      throw new AuthError(error.error || 'Session expired', 401);
+    }
+    
     throw new Error(error.error || `HTTP ${response.status}`);
   }
 
@@ -68,6 +96,9 @@ export const auth = {
     await fetchWithAuth('/api/auth/logout', { method: 'POST' });
     localStorage.removeItem('sessionId');
   },
+  validateSession: async () => {
+    return fetchWithAuth('/api/auth/validate');
+  },
   getIncome: async (userId: number) => {
     return fetchWithAuth(`/api/auth/income?userId=${userId}`);
   },
@@ -75,6 +106,12 @@ export const auth = {
     return fetchWithAuth('/api/auth/income', {
       method: 'PUT',
       body: JSON.stringify({ userId, monthlyIncome }),
+    });
+  },
+  updateProfile: async (userId: number, data: { name?: string; monthlyIncome?: number }) => {
+    return fetchWithAuth('/api/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify({ userId, ...data }),
     });
   },
 };
