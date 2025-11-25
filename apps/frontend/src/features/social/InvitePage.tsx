@@ -61,6 +61,14 @@ export default function InvitePage() {
         // Clear the pending token
         localStorage.removeItem('pendingInviteToken');
         
+        // Check if user needs to set their name
+        if (!user.name) {
+          // Store redirect info to return after onboarding
+          localStorage.setItem('postOnboardingRedirect', '/profile');
+          navigate('/onboarding');
+          return;
+        }
+        
         setStatus('success');
         setMessage(response.message || 'Invite accepted! You can now connect with your friend.');
       } catch (error: any) {

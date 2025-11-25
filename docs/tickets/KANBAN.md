@@ -5,11 +5,11 @@
 ## Board Status
 
 - **Total Tickets**: 109
-- **DONE**: 72 (Phases 1-3 complete, Phase 4 enhanced, Phase 8 mostly complete, Phase 9 started, Phase 10 started)
-- **TODO**: 37 (Phases 4-11 remaining, plus new bugs and enhancements)
+- **DONE**: 75 (Phases 1-3 complete, Phase 4 enhanced, Phase 8 mostly complete, Phase 9 started, Phase 10 started, 3 bugs fixed)
+- **TODO**: 34 (Phases 4-11 remaining, plus remaining bugs and enhancements)
 - **IN PROGRESS**: 0
 - **QA**: 0
-- **BUGS**: 7 (Auth onboarding missing, duplicate return statement, session validation, goal quantity input, modal centering, expense list refresh)
+- **BUGS**: 4 (Mobile modal centering, expense list refresh, duplicate return statement)
 
 ---
 
@@ -50,7 +50,7 @@
 - [P3-004: Basic dashboard](./P3-004-basic-dashboard.md) ✅
 - [P3-005: React Router setup](./P3-005-react-router-setup.md) ✅
 - [P3-006: shadcn/ui components installation](./P3-006-shadcn-ui-components-installation.md) ✅
-- [P3-008: User Onboarding - Name & Income Collection](./P3-008-user-onboarding.md) ⚠️ **BUG** - Missing onboarding step for name (required) and monthly income (optional)
+- [P3-008: User Onboarding - Name & Income Collection](./P3-008-user-onboarding.md) ✅ (Fixed - name entry after invite/verification, profile page editing)
 
 ### Phase 9: PWA & Mobile Optimization (1 ticket completed)
 
@@ -113,6 +113,8 @@
 - [x] P8-013: Goal Friend Sharing UI
 - [x] P8-001: Share Goal UI (Partial - implemented in GoalForm, missing share button on existing goals)
 - [x] P8-002: Shared Goals List (Partial - implemented in GoalsPage, missing role badges/filtering)
+- [x] P8-003: Collaborative Goal Tracking ✅ (Core features implemented: collaborators list, role tracking, permission checks, contribution tracking)
+- [x] P8-006: Shared Expense Contributions ✅ (Core features implemented: contribution summary, per-user totals, expense tracking)
 
 ---
 
@@ -126,11 +128,9 @@
 
 - [P8-001: Share Goal UI - Share Button on Existing Goals](./P8-001-share-goal-ui.md) (Partial - share during creation done, need share button on goal cards)
 - [P8-002: Shared Goals List - Role Badges & Filtering](./P8-002-shared-goals-list.md) (Partial - list display done, need role badges/filtering)
-- [P8-003: Collaborative Goal Tracking](./P8-003-collaborative-goal-tracking.md)
-- [P8-005: Role Management](./P8-005-role-management.md)
-- [P8-006: Shared Expense Contributions](./P8-006-shared-expense-contributions.md)
+- [P8-005: Role Management](./P8-005-role-management.md) (Partial - basic role management done via ManageCollaboratorsDialog, may need enhancements)
 - [P8-007: Expense Visibility Controls](./P8-007-expense-visibility-controls.md)
-- [P8-014: Profile Page Improvements](./P8-014-profile-page-improvements.md) - Fix styling issues, add edit name/budget, expand settings
+- [P8-014: Profile Page Improvements](./P8-014-profile-page-improvements.md) - Fix styling issues, add edit name/budget, expand settings (Partial - name/budget editing already implemented)
 
 ### Phase 12: AI Integration ("The Brain") (Prioritized)
 
@@ -194,12 +194,11 @@ _No tickets currently in QA_
 
 ### Critical Bugs
 
-- [BUG-001: New User Onboarding - Missing Name & Budget Step](./BUG-001-user-onboarding.md) - After OTP/magic link, users can't enter name (required) and monthly budget
-- [BUG-003: Invalid Session on App Return - Queries Don't Load](./BUG-003-invalid-session-queries.md) - Queries fail with invalid session when returning to app
+_None - all critical bugs resolved!_
 
 ### Blocker Bugs
 
-- [BUG-002: Goal Quantity Field Input Issue](./BUG-002-goal-quantity-input.md) - Can't edit default value of 1 in quantity field
+_None - all blocker bugs resolved!_
 
 ### UI/UX Bugs
 
@@ -208,7 +207,6 @@ _No tickets currently in QA_
 
 ### Known Issues
 
-- P3-008: User Onboarding - Missing onboarding step (duplicate of BUG-001)
 - Duplicate return statement in `apps/backend/src/routes/social.ts` line 203
 
 ---
@@ -237,3 +235,8 @@ _No tickets currently in QA_
   - 2 new enhancement tickets (P4-026, P8-014): Expense modal UX rework, profile page improvements
   - Prioritized P10-001 (Skeleton loading states)
   - All tickets added to KANBAN board with proper categorization
+- **2025-01-27**: Fixed 3 critical bugs:
+  - ✅ BUG-001: User Onboarding - Added name entry step after invite/verification, profile page name editing
+  - ✅ BUG-002: Goal Quantity Field Input - Fixed
+  - ✅ BUG-003: Invalid Session Queries - Fixed
+  - Updated P8-003 and P8-006 to reflect completed collaboration tracking features

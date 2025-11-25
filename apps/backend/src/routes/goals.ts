@@ -4,6 +4,8 @@ import {
   goals,
   sharedGoals,
   notifications,
+  expenses,
+  users,
   NewNotification,
 } from '../db/dbSchema.js';
 import { eq, desc } from 'drizzle-orm';
@@ -170,5 +172,61 @@ export async function goalsRoutes(fastify: FastifyInstance) {
     }
 
     return reply.code(204).send();
+  });
+
+  // Get contributions for a goal (all expenses linked to this goal with user info)
+  fastify.get<{
+    Params: { id: string };
+  }>('/api/goals/:id/contributions', async (request, reply) => {
+    const { id } = request.params;
+    const goalId = parseInt(id);
+
+    // Get all expenses linked to this goal with user info
+    const contributionExpenses = await db
+      .select({
+        expense: expenses,
+        user: {
+          id: users.id,
+          name: users.name,
+          email: users.email,
+        },
+      })
+      .from(expenses)
+      .innerJoin(users, eq(expenses.userId, users.id))
+      .where(eq(expenses.goalId, goalId))
+      .orderBy(desc(expenses.date));
+
+    // Calculate summary by user
+    const summaryMap = new Map<
+      number,
+      { userId: number; name: string | null; email: string; total: number; count: number }
+    >();
+
+    for (const { expense, user } of contributionExpenses) {
+      if (!summaryMap.has(user.id)) {
+        summaryMap.set(user.id, {
+          userId: user.id,
+          name: user.name,
+          email: user.email,
+          total: 0,
+          count: 0,
+        });
+      }
+      const entry = summaryMap.get(user.id)!;
+      entry.total += expense.amount;
+      entry.count += 1;
+    }
+
+    const summary = Array.from(summaryMap.values()).sort((a, b) => b.total - a.total);
+    const totalContributed = summary.reduce((sum, s) => sum + s.total, 0);
+
+    return reply.send({
+      expenses: contributionExpenses.map(({ expense, user }) => ({
+        ...expense,
+        contributor: user,
+      })),
+      summary,
+      totalContributed,
+    });
   });
 }

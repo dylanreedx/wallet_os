@@ -405,7 +405,20 @@ export function CategoryBreakdown({ onCategorySelect, selectedCategory }: Catego
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">View all ({categoryData.length})</Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className={cn(
+                  'overflow-y-auto',
+                  'max-w-md',
+                  // Mobile bottom sheet style - override default positioning
+                  '!bottom-0 !left-0 !right-0 !top-auto !translate-y-0 !translate-x-0',
+                  'sm:!bottom-auto sm:!left-[50%] sm:!right-auto sm:!top-[50%] sm:!translate-x-[-50%] sm:!translate-y-[-50%]',
+                  'rounded-t-2xl rounded-b-none sm:rounded-lg',
+                  'border-b-0 sm:border-b',
+                  // Mobile slide animations
+                  'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
+                  'sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95',
+                  'p-3 sm:p-6 pb-6 sm:pb-6',
+                  'max-h-[90vh] sm:max-h-[85vh]'
+                )}>
                   <DialogHeader>
                     <DialogTitle>All Categories</DialogTitle>
                     <DialogDescription>

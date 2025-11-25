@@ -12,6 +12,7 @@ interface User {
   id: number;
   email: string;
   name: string | null;
+  monthlyIncome?: number | null;
 }
 
 interface AuthContextType {

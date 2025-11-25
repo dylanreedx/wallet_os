@@ -198,6 +198,8 @@ export const goals = {
     fetchWithAuth(`/api/goals/${id}`, {
       method: 'DELETE',
     }),
+  getContributions: (goalId: number) =>
+    fetchWithAuth(`/api/goals/${goalId}/contributions`),
 };
 
 // Goal Items

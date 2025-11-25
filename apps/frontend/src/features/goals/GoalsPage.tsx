@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGoals, useSharedGoals } from '@/hooks/useGoals';
@@ -6,11 +6,28 @@ import { GoalFormDialog } from './GoalFormDialog';
 import { GoalCard } from './GoalCard';
 import { GoalStats } from './GoalStats';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+type RoleFilter = 'all' | 'viewer' | 'contributor' | 'owner';
+
+const ROLE_BADGE_STYLES: Record<string, string> = {
+  viewer: 'bg-slate-100 text-slate-700 border-slate-200',
+  contributor: 'bg-blue-100 text-blue-700 border-blue-200',
+  owner: 'bg-purple-100 text-purple-700 border-purple-200',
+};
 
 export default function GoalsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
 
   const {
     data: goalsList = [],
@@ -28,11 +45,30 @@ export default function GoalsPage() {
   });
 
   const sharedGoals = Array.isArray(sharedGoalsRaw) ? sharedGoalsRaw : [];
-  const collabGoals = sharedGoals.map((entry: any) => ({
-    goal: entry.goal,
-    owner: entry.owner,
-    sharedGoal: entry.sharedGoal,
-  }));
+  
+  // Map and sort shared goals by createdAt (most recent first)
+  const collabGoals = useMemo(() => {
+    const mapped = sharedGoals.map((entry: any) => ({
+      goal: entry.goal,
+      owner: entry.owner,
+      sharedGoal: entry.sharedGoal,
+    }));
+    
+    // Sort by shared date (most recent first)
+    return mapped.sort((a, b) => {
+      const dateA = new Date(a.sharedGoal?.createdAt || 0).getTime();
+      const dateB = new Date(b.sharedGoal?.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
+  }, [sharedGoals]);
+
+  // Filter shared goals by role
+  const filteredCollabGoals = useMemo(() => {
+    if (roleFilter === 'all') return collabGoals;
+    return collabGoals.filter(
+      (collab) => collab.sharedGoal?.role === roleFilter
+    );
+  }, [collabGoals, roleFilter]);
 
   const loading = loadingGoals || loadingShared;
   const error = goalsError
@@ -109,6 +145,9 @@ export default function GoalsPage() {
                       key={goal.id}
                       goal={goal}
                       onClick={() => navigate(`/goals/${goal.id}`)}
+                      showShareButton
+                      showManageButton
+                      currentUserId={user?.id}
                     />
                   ))}
                 </div>
@@ -119,38 +158,63 @@ export default function GoalsPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between pt-4">
                   <h2 className="text-xl font-semibold">Shared with You</h2>
-                  <span className="text-sm text-muted-foreground">
-                    {collabGoals.length} collab
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <Select
+                      value={roleFilter}
+                      onValueChange={(value) => setRoleFilter(value as RoleFilter)}
+                    >
+                      <SelectTrigger className="w-[130px] h-8 text-sm">
+                        <SelectValue placeholder="Filter by role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All roles</SelectItem>
+                        <SelectItem value="viewer">Viewer</SelectItem>
+                        <SelectItem value="contributor">Contributor</SelectItem>
+                        <SelectItem value="owner">Owner</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <span className="text-sm text-muted-foreground">
+                      {filteredCollabGoals.length} of {collabGoals.length}
+                    </span>
+                  </div>
                 </div>
                 <div className="space-y-4">
-                  {collabGoals.map((collab) => {
-                    const ownerName =
-                      collab.owner?.name ||
-                      collab.owner?.email ||
-                      'Unknown Owner';
-                    const role =
-                      collab.sharedGoal?.role === 'owner'
-                        ? 'Owner'
-                        : collab.sharedGoal?.role === 'contributor'
-                        ? 'Contributor'
-                        : 'Viewer';
-                    const sharedKey =
-                      collab.sharedGoal?.id ??
-                      `shared-${collab.goal.id}-${
-                        collab.sharedGoal?.userId ?? 'collab'
-                      }`;
+                  {filteredCollabGoals.length === 0 ? (
+                    <div className="text-center py-8 text-sm text-muted-foreground">
+                      No shared goals with this role.
+                    </div>
+                  ) : (
+                    filteredCollabGoals.map((collab) => {
+                      const ownerName =
+                        collab.owner?.name ||
+                        collab.owner?.email ||
+                        'Unknown Owner';
+                      const role = collab.sharedGoal?.role || 'viewer';
+                      const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+                      const sharedKey =
+                        collab.sharedGoal?.id ??
+                        `shared-${collab.goal.id}-${
+                          collab.sharedGoal?.userId ?? 'collab'
+                        }`;
 
-                    return (
-                      <GoalCard
-                        key={sharedKey}
-                        goal={collab.goal}
-                        onClick={() => navigate(`/goals/${collab.goal.id}`)}
-                        contextLabel="Shared"
-                        contextSubtext={`Owner: ${ownerName} • Role: ${role}`}
-                      />
-                    );
-                  })}
+                      return (
+                        <GoalCard
+                          key={sharedKey}
+                          goal={collab.goal}
+                          onClick={() => navigate(`/goals/${collab.goal.id}`)}
+                          contextLabel={
+                            <Badge
+                              variant="outline"
+                              className={`text-xs ${ROLE_BADGE_STYLES[role] || ''}`}
+                            >
+                              {roleLabel}
+                            </Badge>
+                          }
+                          contextSubtext={`Owner: ${ownerName}`}
+                        />
+                      );
+                    })
+                  )}
                 </div>
               </div>
             )}

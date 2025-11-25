@@ -123,7 +123,6 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
     }
   }, [selectedCategory]);
 
-  const [orderedExpenses, setOrderedExpenses] = useState<Expense[]>([]);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deleteConfirmExpense, setDeleteConfirmExpense] = useState<Expense | null>(null);
 
@@ -133,38 +132,30 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
     includeInactive: false,
   });
 
+  // Maintain orderedExpenses state, syncing with query data
+  // During drag operations, we temporarily modify this state for visual feedback
+  const [orderedExpenses, setOrderedExpenses] = useState<Expense[]>([]);
+  
+  // Sync orderedExpenses with query data whenever it changes
   useEffect(() => {
-    setOrderedExpenses((prev) => {
-      // If lengths differ, definitely update
-      if (prev.length !== expenses.length) {
-        return expenses;
+    if (!expenses || expenses.length === 0) {
+      setOrderedExpenses([]);
+      return;
+    }
+    
+    // Sort expenses by date (descending) and then by createdAt (descending) for consistent ordering
+    const sorted = [...expenses].sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      if (dateA !== dateB) {
+        return dateB - dateA; // Newer dates first
       }
-      
-      // Check if data actually changed (not just order)
-      // We need to detect edits to amount, description, date, category, etc.
-      const prevMap = new Map(prev.map(e => [e.id, e]));
-      const hasDataChange = expenses.some((expense: Expense) => {
-        const prevExpense = prevMap.get(expense.id);
-        if (!prevExpense) return true; // New expense
-        // Check if any field changed
-        return (
-          expense.amount !== prevExpense.amount ||
-          expense.description !== prevExpense.description ||
-          expense.date !== prevExpense.date ||
-          expense.category !== prevExpense.category ||
-          expense.color !== prevExpense.color ||
-          expense.goalId !== prevExpense.goalId ||
-          expense.goalItemId !== prevExpense.goalItemId
-        );
-      });
-      
-      if (hasDataChange) {
-        return expenses;
-      }
-      
-      // IDs and data are the same, keep previous order (for drag-drop persistence)
-      return prev;
+      // Same date, sort by createdAt
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
+    
+    // Always update to reflect query data changes (creates, edits, deletes, date changes)
+    setOrderedExpenses(sorted);
   }, [expenses]);
 
   // Drag-and-drop state (both desktop and mobile)

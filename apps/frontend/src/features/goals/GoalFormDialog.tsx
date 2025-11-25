@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,9 @@ export function GoalFormDialog({
   description = 'Set a financial goal and break it down into specific items.',
 }: GoalFormDialogProps) {
   const [open, setOpen] = useState(false);
+  const dialogContentRef = useRef<HTMLDivElement>(null);
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   const handleSuccess = (goal: any) => {
     setOpen(false);
@@ -39,6 +42,65 @@ export function GoalFormDialog({
   const handleCancel = () => {
     setOpen(false);
   };
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Handle visualViewport API for keyboard awareness
+  useEffect(() => {
+    if (!isMobile || !open) return;
+
+    const updateViewportHeight = () => {
+      if (window.visualViewport) {
+        setViewportHeight(window.visualViewport.height);
+      } else {
+        setViewportHeight(window.innerHeight);
+      }
+    };
+
+    updateViewportHeight();
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateViewportHeight);
+      window.visualViewport.addEventListener('scroll', updateViewportHeight);
+      return () => {
+        window.visualViewport?.removeEventListener('resize', updateViewportHeight);
+        window.visualViewport?.removeEventListener('scroll', updateViewportHeight);
+      };
+    } else {
+      window.addEventListener('resize', updateViewportHeight);
+      return () => {
+        window.removeEventListener('resize', updateViewportHeight);
+      };
+    }
+  }, [isMobile, open]);
+
+  // Auto-scroll focused input into view
+  useEffect(() => {
+    if (!isMobile || !open) return;
+
+    const handleFocus = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && dialogContentRef.current?.contains(target)) {
+        setTimeout(() => {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+        }, 300);
+      }
+    };
+
+    document.addEventListener('focusin', handleFocus);
+    return () => document.removeEventListener('focusin', handleFocus);
+  }, [isMobile, open]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -51,18 +113,28 @@ export function GoalFormDialog({
         )}
       </DialogTrigger>
       <DialogContent
+        ref={dialogContentRef}
         className={cn(
           'max-h-[90vh] overflow-y-auto',
           'sm:max-w-2xl',
-          // Mobile bottom sheet style
-          'bottom-0 left-0 right-0 top-auto translate-y-0 translate-x-0',
-          'sm:bottom-auto sm:left-[50%] sm:right-auto sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%]',
+          // Mobile bottom sheet style - override default positioning
+          '!bottom-0 !left-0 !right-0 !top-auto !translate-y-0 !translate-x-0',
+          'sm:!bottom-auto sm:!left-[50%] sm:!right-auto sm:!top-[50%] sm:!translate-x-[-50%] sm:!translate-y-[-50%]',
           'rounded-t-2xl rounded-b-none sm:rounded-lg',
           'border-b-0 sm:border-b',
           // Mobile slide animations
           'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
-          'sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95'
+          'sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95',
+          'p-3 sm:p-6 pb-6 sm:pb-6',
+          'transition-[max-height] duration-150 ease-out'
         )}
+        style={{
+          maxHeight: isMobile && viewportHeight
+            ? `${viewportHeight - 20}px`
+            : undefined,
+          width: isMobile ? '100%' : undefined,
+          maxWidth: isMobile ? '100%' : undefined,
+        }}
         onInteractOutside={(e: any) => {
           // Prevent closing the dialog when clicking inside a popover (like date picker)
           const target = e.target as HTMLElement;

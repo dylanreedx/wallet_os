@@ -1,6 +1,9 @@
+import { ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { ShareGoalDialog } from './ShareGoalDialog';
+import { ManageCollaboratorsDialog } from './ManageCollaboratorsDialog';
 
 interface GoalCardProps {
   goal: {
@@ -11,10 +14,14 @@ interface GoalCardProps {
     deadline: string | Date;
     description?: string | null;
     targetMonth?: string | null;
+    userId?: number;
   };
   onClick?: () => void;
-  contextLabel?: string;
+  contextLabel?: ReactNode;
   contextSubtext?: string;
+  showShareButton?: boolean;
+  showManageButton?: boolean;
+  currentUserId?: number;
 }
 
 export function GoalCard({
@@ -22,6 +29,9 @@ export function GoalCard({
   onClick,
   contextLabel,
   contextSubtext,
+  showShareButton = false,
+  showManageButton = false,
+  currentUserId,
 }: GoalCardProps) {
   const progress =
     goal.targetAmount > 0
@@ -35,6 +45,11 @@ export function GoalCard({
 
   const isOverdue = daysRemaining < 0;
   const isCompleted = progress >= 100;
+  
+  // Only show share/manage buttons if it's the user's own goal
+  const isOwner = currentUserId && goal.userId === currentUserId;
+  const canShare = showShareButton && isOwner;
+  const canManage = showManageButton && isOwner;
 
   return (
     <Card
@@ -54,11 +69,27 @@ export function GoalCard({
               </p>
             )}
           </div>
-          {contextLabel && (
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary whitespace-nowrap">
-              {contextLabel}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {canManage && (
+              <div onClick={(e) => e.stopPropagation()}>
+                <ManageCollaboratorsDialog goalId={goal.id} goalName={goal.name} />
+              </div>
+            )}
+            {canShare && (
+              <div onClick={(e) => e.stopPropagation()}>
+                <ShareGoalDialog goalId={goal.id} goalName={goal.name} />
+              </div>
+            )}
+            {contextLabel && (
+              typeof contextLabel === 'string' ? (
+                <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary whitespace-nowrap">
+                  {contextLabel}
+                </span>
+              ) : (
+                contextLabel
+              )
+            )}
+          </div>
         </div>
 
         {contextSubtext && (
