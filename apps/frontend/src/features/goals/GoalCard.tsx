@@ -102,7 +102,7 @@ export function GoalCard({
 
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>
-              Deadline: {format(new Date(goal.deadline.substring(0, 10) + 'T12:00:00'), 'MMM dd, yyyy')}
+              Deadline: {format(new Date((typeof goal.deadline === 'string' ? goal.deadline.substring(0, 10) : goal.deadline.toISOString().substring(0, 10)) + 'T12:00:00'), 'MMM dd, yyyy')}
             </span>
             <span
               className={cn(

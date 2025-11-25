@@ -143,7 +143,7 @@ export function ExpenseList({ refreshTrigger, selectedCategory }: ExpenseListPro
       // Check if data actually changed (not just order)
       // We need to detect edits to amount, description, date, category, etc.
       const prevMap = new Map(prev.map(e => [e.id, e]));
-      const hasDataChange = expenses.some((expense) => {
+      const hasDataChange = expenses.some((expense: Expense) => {
         const prevExpense = prevMap.get(expense.id);
         if (!prevExpense) return true; // New expense
         // Check if any field changed
